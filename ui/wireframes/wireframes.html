@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tasheel Finance — Screen Wireframes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<h1 class="page-title">Tasheel Finance — Screen Wireframes</h1>
+<p style="text-align:center;color:var(--text-muted);font-size:var(--fs-sm);margin-bottom:32px">Existing system baseline · <span style="background:#fff3e0;padding:2px 8px;border-radius:4px;color:#b87a08">Orange dashed = BridgeNow enhancement points</span></p>
+
+<div class="phone-grid">
+
+<!-- A. LOGIN -->
+<div>
+<div class="screen-label">A. Login</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1">
+    <div style="font-size:48px;margin-bottom:var(--sp-2)">🏦</div>
+    <div style="font-size:var(--fs-2xl);font-weight:700;margin-bottom:var(--sp-8)">Tasheel Finance</div>
+    <div style="width:100%">
+      <div class="field"><label>Phone or Email</label><div class="input with-icon"><span style="color:var(--text-muted)">📱 Enter phone or email</span></div></div>
+      <div class="field"><label>Password</label><div class="input with-icon"><span style="color:var(--text-muted)">🔒 Enter password</span><span class="icon">👁</span></div></div>
+      <button class="btn btn-primary" style="margin-top:var(--sp-4)">LOG IN</button>
+      <div style="text-align:center;margin:var(--sp-5) 0;color:var(--text-muted);font-size:var(--fs-sm)">── or sign in with ──</div>
+      <button class="btn btn-text">👆 Biometric Login</button>
+      <div style="text-align:center;margin-top:var(--sp-4)"><a style="font-size:var(--fs-sm);color:var(--primary);text-decoration:none">Forgot password?</a></div>
+    </div>
+    <div class="bn">🔶 BRIDGENOW: Add "Register with Nafath" button below biometric</div>
+  </div>
+</div>
+</div>
+
+<!-- B. PRODUCT LIST -->
+<div>
+<div class="screen-label">B. Product List</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Our Products</span><span class="action">🔔</span></div>
+  <div class="content" style="flex:1">
+    <div class="card card-clickable">
+      <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2)"><span>🏦</span><span class="card-title">Cash Finance</span></div>
+      <div class="card-body">SAR 5,000 – 250,000<br>Rate: 20% · 3–60 months</div>
+      <div class="card-footer"><button class="btn btn-primary" style="height:40px;font-size:var(--fs-sm)">Apply Now</button></div>
+    </div>
+    <div class="card card-clickable">
+      <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2)"><span>💳</span><span class="card-title">Combo Finance</span></div>
+      <div class="card-body">SAR 10,000 – 500,000<br>Rate: 18% · 6–60 months</div>
+      <div class="card-footer"><button class="btn btn-primary" style="height:40px;font-size:var(--fs-sm)">Apply Now</button></div>
+    </div>
+    <div class="bn">🔶 BRIDGENOW: Add "Top-Up" badge on eligible cards</div>
+    <div class="bn">🔶 BRIDGENOW: Add "BridgeNow Finance" card — SAR 4K–30K, 24mo fixed, 27% p.a., No Early Closure Fee</div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item active"><span>🏠</span>Home</div>
+    <div class="nav-item"><span>📋</span>Products</div>
+    <div class="nav-item"><span>👤</span>Profile</div>
+  </div>
+</div>
+</div>
+
+<!-- C1. APPLICATION - PERSONAL INFO -->
+<div>
+<div class="screen-label">C1. Apply — Personal Info</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Apply – Personal Info</span><span class="step-ind">1/4</span></div>
+  <div class="progress-bar"><div class="fill" style="width:25%"></div></div>
+  <div class="content" style="flex:1;padding-top:0">
+    <div class="field"><label>Full Name</label><div class="input"><span style="color:var(--text-muted)">Enter full name</span></div></div>
+    <div class="field"><label>Date of Birth</label><div class="input with-icon"><span style="color:var(--text-muted)">DD/MM/YYYY</span><span class="icon">📅</span></div></div>
+    <div class="field"><label>National ID (Iqama)</label><div class="input"><span style="color:var(--text-muted)">10-digit ID</span></div></div>
+    <div class="field"><label>Address Line 1</label><div class="input"><span style="color:var(--text-muted)">Street address</span></div></div>
+    <div class="field"><label>City</label><div class="input"><span style="color:var(--text-muted)">City</span></div></div>
+    <div class="field"><label>Region</label><div class="input with-icon"><span style="color:var(--text-muted)">Select region</span><span class="icon">▼</span></div></div>
+    <div class="bn">🔶 BRIDGENOW: Auto-populate from Nafath/Absher</div>
+  </div>
+  <div class="btn-row"><button class="btn btn-primary">Next →</button></div>
+</div>
+</div>
+
+<!-- C2. APPLICATION - EMPLOYMENT -->
+<div>
+<div class="screen-label">C2. Apply — Employment</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Apply – Employment</span><span class="step-ind">2/4</span></div>
+  <div class="progress-bar"><div class="fill" style="width:50%"></div></div>
+  <div class="content" style="flex:1;padding-top:0">
+    <div class="field"><label>Employment Type</label><div class="input with-icon"><span style="color:var(--text-muted)">Government / Private / Military</span><span class="icon">▼</span></div></div>
+    <div class="field"><label>Employer Name</label><div class="input"><span style="color:var(--text-muted)">Company name</span></div></div>
+    <div class="field"><label>Employment Start Date</label><div class="input with-icon"><span style="color:var(--text-muted)">DD/MM/YYYY</span><span class="icon">📅</span></div></div>
+    <div class="bn">🔶 BRIDGENOW: Add employer lookup via GOSI integration</div>
+  </div>
+  <div class="btn-row"><button class="btn btn-secondary">← Back</button><button class="btn btn-primary">Next →</button></div>
+</div>
+</div>
+
+<!-- C3. APPLICATION - INCOME -->
+<div>
+<div class="screen-label">C3. Apply — Income</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Apply – Income</span><span class="step-ind">3/4</span></div>
+  <div class="progress-bar"><div class="fill" style="width:75%"></div></div>
+  <div class="content" style="flex:1;padding-top:0">
+    <div class="field"><label>Gross Monthly Income (SAR)</label><div class="input"><span style="color:var(--text-muted)">0.00</span></div></div>
+    <div class="field"><label>Net Monthly Income (SAR)</label><div class="input"><span style="color:var(--text-muted)">0.00</span></div></div>
+    <div class="field"><label>Other Income (SAR)</label><div class="input"><span style="color:var(--text-muted)">0.00</span></div></div>
+    <div class="info-banner">ℹ️ For Cash Finance, income fields are editable. For Combo, values are fetched from employer payroll.</div>
+    <div class="bn">🔶 BRIDGENOW: Add SIMAH-sourced existing obligations summary showing current DBR</div>
+  </div>
+  <div class="btn-row"><button class="btn btn-secondary">← Back</button><button class="btn btn-primary">Next →</button></div>
+</div>
+</div>
+
+<!-- C4. APPLICATION - REVIEW -->
+<div>
+<div class="screen-label">C4. Apply — Review & Submit</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Apply – Review</span><span class="step-ind">4/4</span></div>
+  <div class="progress-bar"><div class="fill" style="width:100%"></div></div>
+  <div class="content" style="flex:1;padding-top:0">
+    <div class="section">
+      <div class="section-title">Personal Info <span class="edit">✏️ Edit</span></div>
+      <div class="kv"><span class="k">Name</span><span class="v">Ahmed Al-Rashid</span></div>
+      <div class="kv"><span class="k">DOB</span><span class="v">15/03/1985</span></div>
+      <div class="kv"><span class="k">National ID</span><span class="v">••••••7890</span></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Employment <span class="edit">✏️ Edit</span></div>
+      <div class="kv"><span class="k">Type</span><span class="v">Government</span></div>
+      <div class="kv"><span class="k">Employer</span><span class="v">Saudi Aramco</span></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Income <span class="edit">✏️ Edit</span></div>
+      <div class="kv"><span class="k">Gross</span><span class="v">SAR 15,000</span></div>
+      <div class="kv"><span class="k">Net</span><span class="v">SAR 13,500</span></div>
+    </div>
+    <div class="checkbox"><div class="box">☑</div><span>I agree to the Terms & Conditions and authorize credit checks.</span></div>
+    <div class="bn">🔶 BRIDGENOW: Add consent checkbox for BridgeNow data sharing</div>
+  </div>
+  <div class="btn-row"><button class="btn btn-primary">Submit Application</button></div>
+</div>
+</div>
+
+<!-- D. CARD COLLECTION -->
+<div>
+<div class="screen-label">D. Card & Debit Setup</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Card & Debit Setup</span></div>
+  <div class="content" style="flex:1">
+    <p style="font-size:var(--fs-sm);color:var(--text-secondary);margin-bottom:var(--sp-5)">Register your debit card for automatic repayments</p>
+    <div class="field"><label>Card Number</label><div class="input"><span style="color:var(--text-muted)">XXXX XXXX XXXX ____</span></div></div>
+    <div class="field-row">
+      <div class="field"><label>Expiry MM/YY</label><div class="input"><span style="color:var(--text-muted)">MM/YY</span></div></div>
+      <div class="field"><label>CVV</label><div class="input"><span style="color:var(--text-muted)">•••</span></div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="field"><label>Salary Credit Date</label><div class="input with-icon"><span style="color:var(--text-muted)">Day of month (1–28)</span><span class="icon">📅 ▼</span></div></div>
+    <div class="checkbox"><div class="box">☑</div><span>I authorize Tasheel Finance to auto-debit monthly payments from this card on the selected date.</span></div>
+    <div class="bn">🔶 BRIDGENOW: Add option to link multiple cards for split debit</div>
+  </div>
+  <div class="btn-row"><button class="btn btn-primary">Confirm & Continue</button></div>
+</div>
+</div>
+
+</div><!-- end phone-grid part 1 -->
+
+<div class="phone-grid">
+
+<!-- E. OFFER SCREEN -->
+<div>
+<div class="screen-label">E. Offer</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Your Offer</span></div>
+  <div class="content" style="flex:1">
+    <div style="text-align:center;font-size:var(--fs-xl);margin-bottom:var(--sp-2)">🎉</div>
+    <div style="text-align:center;font-size:var(--fs-lg);font-weight:600;margin-bottom:var(--sp-4)">Congratulations!</div>
+    <div class="offer-box">
+      <div style="font-size:var(--fs-3xl);font-weight:700;color:var(--primary)">SAR 150,000</div>
+      <div style="font-size:var(--fs-sm);color:var(--text-secondary);margin-top:var(--sp-1)">Loan Amount</div>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Tenure</span><span class="v">36 months</span></div>
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Annual Rate</span><span class="v">20.00%</span></div>
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Monthly Payment</span><span class="v">SAR 5,577</span></div>
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Total Payable</span><span class="v">SAR 200,772</span></div>
+    </div>
+    <div class="info-banner">ℹ️ This offer is valid for 48 hours</div>
+    <div class="bn">🔶 BRIDGENOW: Add "Adjust Amount" slider to recalculate terms</div>
+    <button class="btn btn-primary" style="margin-bottom:var(--sp-3)">Accept Offer</button>
+    <button class="btn btn-secondary">Decline</button>
+  </div>
+</div>
+</div>
+
+<!-- F. DASHBOARD -->
+<div>
+<div class="screen-label">F. Dashboard</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="action">☰</span><span class="title">Dashboard</span><span class="action">🔔</span></div>
+  <div class="content" style="flex:1">
+    <div style="font-size:var(--fs-lg);font-weight:600;margin-bottom:var(--sp-4)">Welcome back, Ahmed</div>
+    <div class="bn">🔶 BRIDGENOW: Add "Top-Up Eligible" banner if customer qualifies</div>
+    <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text-secondary);margin-bottom:var(--sp-3)">Active Loans</div>
+    <div class="card card-clickable">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2)">
+        <span class="card-title" style="font-size:var(--fs-md)">Cash Finance</span><span class="badge badge-success">Active</span>
+      </div>
+      <div style="font-size:var(--fs-2xl);font-weight:700;color:var(--primary)">SAR 120,450</div>
+      <div class="card-body">Next Payment: SAR 5,577<br>Due: 15 May 2026</div>
+      <div style="text-align:right;color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--sp-2)">→</div>
+    </div>
+    <div class="card card-clickable">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2)">
+        <span class="card-title" style="font-size:var(--fs-md)">Combo Finance</span><span class="badge badge-muted">Completed</span>
+      </div>
+      <div style="font-size:var(--fs-xl);font-weight:700;color:var(--text-muted)">SAR 0</div>
+      <div class="card-body">Fully paid</div>
+    </div>
+    <div class="bn">🔶 BRIDGENOW: Add "Bridge Loan" quick-apply FAB for eligible customers</div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item active"><span>🏠</span>Home</div>
+    <div class="nav-item"><span>📋</span>Products</div>
+    <div class="nav-item"><span>👤</span>Profile</div>
+  </div>
+</div>
+</div>
+
+<!-- G. LOAN DETAIL -->
+<div>
+<div class="screen-label">G. Loan Detail</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Cash Finance</span><span class="badge badge-success" style="margin-left:auto">Active</span></div>
+  <div class="content" style="flex:1">
+    <div class="hero">
+      <div class="amount">SAR 120,450</div>
+      <div class="label">Outstanding Balance</div>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Original Amount</span><span class="v">SAR 150,000</span></div>
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Tenure</span><span class="v">36 months</span></div>
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Rate</span><span class="v">20.00%</span></div>
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Monthly Payment</span><span class="v">SAR 5,577</span></div>
+      <div class="kv" style="padding:var(--sp-3) var(--sp-4)"><span class="k">Payments Made</span><span class="v">6 of 36</span></div>
+    </div>
+    <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text-secondary);margin:var(--sp-4) 0 var(--sp-2)">Payment Schedule</div>
+    <table class="table">
+      <tr><th>#</th><th>Date</th><th>Amount</th><th></th></tr>
+      <tr><td>1</td><td>15 Nov 25</td><td>5,577</td><td>✅</td></tr>
+      <tr><td>2</td><td>15 Dec 25</td><td>5,577</td><td>✅</td></tr>
+      <tr><td>3</td><td>15 Jan 26</td><td>5,577</td><td>✅</td></tr>
+      <tr><td>7</td><td>15 May 26</td><td>5,577</td><td>⏳</td></tr>
+    </table>
+    <div style="margin-top:var(--sp-4)">
+      <button class="btn btn-primary" style="margin-bottom:var(--sp-3)">Request Settlement Figure</button>
+      <button class="btn btn-secondary">Download Liability Letter</button>
+    </div>
+    <div class="bn" style="margin-top:var(--sp-3)">🔶 BRIDGENOW: Add "Apply for Top-Up" and "Request Bridge Loan" buttons</div>
+  </div>
+</div>
+</div>
+
+<!-- H. BACK OFFICE -->
+<div>
+<div class="screen-label">H. Back Office</div>
+<div class="phone" style="width:480px">
+  <div style="height:48px;background:var(--neutral-900);display:flex;align-items:center;padding:0 var(--sp-5);justify-content:space-between">
+    <span style="color:var(--text-white);font-weight:600;font-size:var(--fs-lg)">Tasheel Back Office</span>
+    <span style="color:var(--neutral-400);font-size:var(--fs-sm)">Agent ▼</span>
+  </div>
+  <div class="content" style="flex:1;background:var(--bg)">
+    <div style="font-size:var(--fs-xl);font-weight:600;margin-bottom:var(--sp-5)">Create New Application</div>
+    <div class="field"><label>Product Type</label><div class="input with-icon"><span>Cash Finance</span><span class="icon">▼</span></div></div>
+    <div style="font-size:var(--fs-md);font-weight:600;margin:var(--sp-4) 0 var(--sp-3);color:var(--text-secondary)">Customer Information</div>
+    <div class="field"><label>National ID</label><div class="input"><span style="color:var(--text-muted)">10-digit ID</span></div></div>
+    <div class="field"><label>Full Name</label><div class="input"><span style="color:var(--text-muted)">Customer name</span></div></div>
+    <div class="field-row">
+      <div class="field"><label>Phone</label><div class="input"><span style="color:var(--text-muted)">05XXXXXXXX</span></div></div>
+      <div class="field"><label>Email</label><div class="input"><span style="color:var(--text-muted)">email@example.com</span></div></div>
+    </div>
+    <div style="font-size:var(--fs-md);font-weight:600;margin:var(--sp-4) 0 var(--sp-3);color:var(--text-secondary)">Income Details</div>
+    <div class="field-row">
+      <div class="field"><label>Gross Income (SAR)</label><div class="input"><span style="color:var(--text-muted)">0.00</span></div></div>
+      <div class="field"><label>Net Income (SAR)</label><div class="input"><span style="color:var(--text-muted)">0.00</span></div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Requested Amount (SAR)</label><div class="input"><span style="color:var(--text-muted)">0.00</span></div></div>
+      <div class="field"><label>Tenure (months)</label><div class="input with-icon"><span style="color:var(--text-muted)">Select</span><span class="icon">▼</span></div></div>
+    </div>
+    <div class="bn">🔶 BRIDGENOW: Add "BridgeNow Finance" to product dropdown + bridge-specific fields (salary date, amount cap display)</div>
+    <button class="btn btn-primary" style="margin-top:var(--sp-4)">Submit Application</button>
+  </div>
+</div>
+</div>
+
+</div><!-- end phone-grid part 2 -->
+
+<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:var(--fs-sm)">
+  Tasheel Finance Design System · 8 Screens · Baseline for BridgeNow Enhancements
+</div>
+</body>
+</html>
