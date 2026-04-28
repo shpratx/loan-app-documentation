@@ -1,0 +1,66 @@
+{
+  "validation_result": "PASS",
+  "epic_id": "EP-01",
+  "epic_title": "Platform Foundation & Authentication",
+
+  "checklist": [
+    {"check": "Epic has title and description", "status": "pass", "detail": "Title: 'Platform Foundation & Authentication'. Description: 213 chars, explains what (scaffold, auth, product catalogue) and why (foundation for all sprints). Includes deployment milestone: 'At sprint end: a working app where users can register, login, and see the product catalogue.'", "citation": "epic.title, epic.description"},
+    {"check": "Epic has scope_in and scope_out", "status": "pass", "detail": "scope_in: 8 items (app scaffold, design system, API scaffold, auth, product catalogue, BridgeNow config, product tag, CI pipeline). scope_out: 4 items (application form, DE, disbursement, back office).", "citation": "epic.scope_in (8), epic.scope_out (4)"},
+    {"check": "Epic has features with sufficient detail", "status": "pass", "detail": "4 features (F-01.1 to F-01.4). All have ID, title, description >100 chars. F-01.1: 340 chars with specific tokens, components, frameworks. F-01.2: 380 chars with architecture layers, middleware, CI. F-01.3: 290 chars with OTP params, JWT config, storage. F-01.4: 350 chars with product params, screens, APIs.", "citation": "epic.features[*].description"},
+    {"check": "Stories have user_story format", "status": "pass", "detail": "All 14 stories follow 'As a {role}, I want {capability}, so that {benefit}'. Roles used: system administrator (US-001,003,004,009,013), loan applicant (US-002,005,006,007,008,010,011,012,014), operations agent (none in EP-01).", "citation": "stories[*].user_story"},
+    {"check": "Stories have Given/When/Then ACs", "status": "pass", "detail": "All 14 stories have 3-4 ACs each (total 51 ACs). All in Given/When/Then format. Specific values used (e.g., '6-digit OTP', '90 seconds', 'SAR 4,000', '27% p.a.').", "citation": "stories[*].acceptance_criteria"},
+    {"check": "Stories have data_sensitivity", "status": "pass", "detail": "All 14 classified: Public (US-002,010,011,012), Internal (US-001,003,004,009,013), Confidential (US-005,006), Restricted (US-007,008,014). Classification follows data handled: tokens=Restricted, PII=Confidential, config=Internal, product info=Public.", "citation": "stories[*].data_sensitivity"},
+    {"check": "Stories have change_type", "status": "pass", "detail": "All 14 stories: change_type='new'. Correct for greenfield mode.", "citation": "stories[*].change_type"},
+    {"check": "Requirements traceability", "status": "pass", "detail": "Epic covers FR-01, FR-13, FR-20, FR-31, NFR-01, NFR-02 (6 requirements). Features map: F-01.1→FR-02, F-01.2→(infra, no direct FR), F-01.3→FR-20, F-01.4→FR-01,FR-02,FR-13,FR-31.", "citation": "epic.requirements_covered, features[*].requirements_covered"},
+    {"check": "Brownfield: existing_context populated", "status": "pass", "detail": "N/A — greenfield mode. All stories have existing_context with null values. No existing features referenced.", "citation": "N/A (greenfield)"},
+    {"check": "Brownfield: regression_criteria exist", "status": "pass", "detail": "N/A — greenfield mode. All stories have regression_criteria=[] (empty). Correct — nothing exists to regress.", "citation": "N/A (greenfield)"}
+  ],
+
+  "mode": "greenfield",
+  "mode_reasoning": "All 14 stories have change_type='new'. No existing docs or codebase referenced. No baseline KB available. All features are being built from scratch.",
+
+  "classification": {
+    "ui_changes": [
+      {"story_id": "US-002", "title": "Design System Theme Tokens and Atomic Components", "screens_affected": ["theme", "components"], "change_type": "new"},
+      {"story_id": "US-005", "title": "Customer Registration with Phone and OTP Verification", "screens_affected": ["login", "otp"], "change_type": "new"},
+      {"story_id": "US-006", "title": "OTP Rate Limiting and Registration Error Handling", "screens_affected": ["otp-error"], "change_type": "new"},
+      {"story_id": "US-008", "title": "Biometric Authentication Enrollment and Login", "screens_affected": ["biometric-prompt"], "change_type": "new"},
+      {"story_id": "US-010", "title": "Product List Screen with Card Type Tags", "screens_affected": ["product-list"], "change_type": "new"},
+      {"story_id": "US-011", "title": "BridgeNow Landing Page with Product Details", "screens_affected": ["bridgenow-landing"], "change_type": "new"},
+      {"story_id": "US-012", "title": "Product List and Landing Page Error Handling", "screens_affected": ["product-list-error", "landing-error"], "change_type": "new"}
+    ],
+    "api_changes": [
+      {"story_id": "US-003", "title": "API Scaffold with .NET 8 Clean Architecture and CQRS", "endpoints_affected": ["scaffold"], "change_type": "new"},
+      {"story_id": "US-004", "title": "Health Endpoints, Swagger Documentation, and CI Pipeline", "endpoints_affected": ["GET /health", "GET /health/ready"], "change_type": "new"},
+      {"story_id": "US-005", "title": "Customer Registration with Phone and OTP Verification", "endpoints_affected": ["POST /auth/register", "POST /auth/verify-otp"], "change_type": "new"},
+      {"story_id": "US-007", "title": "JWT Token Issuance and Refresh Flow", "endpoints_affected": ["POST /auth/token", "POST /auth/refresh"], "change_type": "new"},
+      {"story_id": "US-009", "title": "Product Catalogue Entity and Seed Data Configuration", "endpoints_affected": ["GET /products", "GET /products/{id}"], "change_type": "new"},
+      {"story_id": "US-013", "title": "API Error Handling with RFC 7807 and Correlation ID", "endpoints_affected": ["all endpoints (middleware)"], "change_type": "new"}
+    ],
+    "integration_changes": [],
+    "data_changes": [
+      {"story_id": "US-009", "title": "Product Catalogue Entity and Seed Data Configuration", "tables_affected": ["Products"]}
+    ]
+  },
+
+  "steps_required": {
+    "step3_ux_ui": true,
+    "step4_api_spec": true,
+    "step5_architecture": true,
+    "step6_hld_lld": true,
+    "step7_github": true
+  },
+
+  "existing_docs_found": {
+    "solution_architecture": false,
+    "hld": false,
+    "lld": false,
+    "api_spec": false,
+    "integration_architecture": false,
+    "design_system": false,
+    "wireframes": false,
+    "user_flows": false
+  },
+
+  "reasoning": "EP-01 passes all 10 validation checks. Mode is greenfield — all stories are new, no baseline exists. The epic is well-structured as a foundation sprint: design system (F-01.1) unblocks all UI work, API scaffold (F-01.2) unblocks all backend work, auth (F-01.3) is required by every subsequent feature, and product catalogue (F-01.4) gives a deployable v0.1. 14 stories with 57 total points is appropriate for a 2-week sprint with a team of 4-5 developers. All stories have specific ACs with measurable values (OTP params, JWT expiry, product amounts). Data sensitivity correctly classified — Restricted for tokens/biometric, Confidential for PII, Internal for config, Public for product info. Domain terms (BridgeNow, Tawarruq, SAMA) used correctly per domain glossary."
+}

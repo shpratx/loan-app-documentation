@@ -1,0 +1,403 @@
+{
+  "epic_id": "EP-01",
+  "mode": "greenfield",
+  "discovery": {
+    "existing_components_analysed": [],
+    "existing_docs_analysed": [],
+    "greenfield_assessment": "No existing codebase or documentation. All components must be built from scratch. Architecture decisions driven by kb-L0-enterprise-architecture (EA1-EA20) and kb-L2-payments-domain (PD1-PD25)."
+  },
+  "architecture_blueprint": {
+    "bounded_contexts": [
+      {
+        "name": "Auth",
+        "responsibility": "User registration, OTP verification, JWT session management, biometric enrollment",
+        "entities": [
+          "User",
+          "OtpToken",
+          "Session"
+        ],
+        "sprint": 1
+      },
+      {
+        "name": "Products",
+        "responsibility": "Product catalogue, BridgeNow configuration, eligibility rules",
+        "entities": [
+          "Product"
+        ],
+        "sprint": 1
+      },
+      {
+        "name": "Applications",
+        "responsibility": "Loan application lifecycle, data capture, state machine",
+        "entities": [
+          "LoanApplication"
+        ],
+        "sprint": 2
+      },
+      {
+        "name": "Assessment",
+        "responsibility": "Decision engine, CITC/SIMAH/Geo verifications, DBR calculation",
+        "entities": [
+          "Assessment",
+          "VerificationResult"
+        ],
+        "sprint": 2
+      },
+      {
+        "name": "Offers",
+        "responsibility": "Offer generation, Tawarruq contract, acceptance",
+        "entities": [
+          "Offer",
+          "Contract"
+        ],
+        "sprint": 2
+      },
+      {
+        "name": "Loans",
+        "responsibility": "Active loan management, repayment schedule, settlement",
+        "entities": [
+          "Loan",
+          "Payment",
+          "RepaymentSchedule"
+        ],
+        "sprint": 3
+      },
+      {
+        "name": "Cards",
+        "responsibility": "Debit card tokenisation, auto-debit scheduling",
+        "entities": [
+          "DebitCard",
+          "AutoDebitSchedule"
+        ],
+        "sprint": 2
+      },
+      {
+        "name": "Notifications",
+        "responsibility": "Push + SMS notifications, templates",
+        "entities": [
+          "Notification",
+          "Template"
+        ],
+        "sprint": 3
+      },
+      {
+        "name": "BackOffice",
+        "responsibility": "Agent operations, staging log",
+        "entities": [
+          "StagingLog"
+        ],
+        "sprint": 4
+      }
+    ],
+    "tech_stack": {
+      "mobile": {
+        "language": "Kotlin 2.0",
+        "framework": "Jetpack Compose",
+        "di": "Hilt 2.51",
+        "navigation": "Navigation Compose 2.7.7",
+        "state": "StateFlow",
+        "local_db": "Room 2.6.1",
+        "networking": "Retrofit 2.9.0 + OkHttp 4.12.0",
+        "design_system": "Material Design 3",
+        "testing": "JUnit 5 + Compose UI Test + Espresso"
+      },
+      "backend": {
+        "language": "C# 12",
+        "framework": ".NET 8 Web API",
+        "architecture": "Clean Architecture + CQRS (MediatR 12)",
+        "orm": "EF Core 8",
+        "validation": "FluentValidation 11",
+        "logging": "Serilog 4",
+        "database": "SQL Server 2022 (In-Memory for dev)",
+        "api_docs": "Swashbuckle (OpenAPI 3.0)",
+        "testing": "xUnit + NSubstitute + WebApplicationFactory"
+      },
+      "infrastructure": {
+        "container": "Docker (Alpine)",
+        "orchestration": "AKS",
+        "ci_cd": "GitHub Actions",
+        "secrets": "Azure Key Vault",
+        "monitoring": "OpenTelemetry + Azure Monitor"
+      }
+    },
+    "integrations_needed": [
+      {
+        "system": "SIMAH (Credit Bureau)",
+        "protocol": "REST",
+        "sprint": 2,
+        "purpose": "Credit score + existing obligations for DBR"
+      },
+      {
+        "system": "CITC (Employment)",
+        "protocol": "REST",
+        "sprint": 2,
+        "purpose": "Employment verification"
+      },
+      {
+        "system": "Geolocation",
+        "protocol": "REST",
+        "sprint": 2,
+        "purpose": "Address/location verification"
+      },
+      {
+        "system": "Open Banking (AISP)",
+        "protocol": "REST + redirect",
+        "sprint": 2,
+        "purpose": "Bank statement for unlisted companies"
+      },
+      {
+        "system": "Payment Processor",
+        "protocol": "REST + webhooks",
+        "sprint": 2,
+        "purpose": "Card tokenisation, auto-debit, disbursement"
+      },
+      {
+        "system": "SMS Gateway",
+        "protocol": "REST",
+        "sprint": 1,
+        "purpose": "OTP delivery (Sprint 1), notifications (Sprint 3)"
+      },
+      {
+        "system": "FCM (Push)",
+        "protocol": "REST",
+        "sprint": 3,
+        "purpose": "Push notifications"
+      }
+    ],
+    "api_standards": {
+      "base_url": "/api/v1/{resource}",
+      "response_envelope": "{ data, meta: { pageNumber, pageSize, totalCount } }",
+      "error_format": "RFC 7807 ProblemDetails",
+      "json_conventions": "camelCase properties, ISO 8601 dates, enums as strings",
+      "headers": [
+        "X-Correlation-Id (auto-generated)",
+        "Idempotency-Key (on writes)",
+        "Authorization (Bearer JWT)"
+      ],
+      "pagination": "pageNumber (1-based) + pageSize (max 100, default 20)",
+      "rate_limiting": "100 read/min, 20 write/min per user",
+      "kb_reference": "EA3 API Standards"
+    }
+  },
+  "sprint1_scope": {
+    "components_to_build": {
+      "mobile": [
+        "App scaffold (Hilt, Navigation, Theme)",
+        "Design system atoms (Button, TextField, Card, Badge, Skeleton, ErrorState)",
+        "Login screen + OTP screen",
+        "Product list screen",
+        "BridgeNow landing page",
+        "Bottom navigation shell"
+      ],
+      "backend": [
+        "Solution scaffold (4 projects: Domain, Application, Infrastructure, Api)",
+        "Health endpoints",
+        "Exception middleware (RFC 7807)",
+        "Correlation ID middleware",
+        "Auth endpoints (register, verify-otp, token, refresh)",
+        "Product endpoints (list, detail)",
+        "Data seeder (BridgeNow + Cash + Combo products)",
+        "CI pipeline (lint, build, test, SAST, SCA, Docker)"
+      ],
+      "database": [
+        "Users table",
+        "OtpTokens table",
+        "Products table (seeded)",
+        "AuditLogs table"
+      ],
+      "infrastructure": [
+        "Dockerfile",
+        "docker-compose.yml (dev)",
+        "GitHub Actions CI",
+        ".editorconfig",
+        "global.json"
+      ]
+    },
+    "screens": [
+      {
+        "name": "Login",
+        "route": "/auth/login",
+        "features": [
+          "Phone input",
+          "OTP entry",
+          "Biometric prompt",
+          "Forgot password link"
+        ]
+      },
+      {
+        "name": "Product List",
+        "route": "/products",
+        "features": [
+          "Product cards (BridgeNow, Cash, Combo)",
+          "Apply CTA",
+          "Bottom nav"
+        ]
+      },
+      {
+        "name": "BridgeNow Landing",
+        "route": "/products/bridgenow",
+        "features": [
+          "Hero: 'No Early Closure Charges'",
+          "Product params",
+          "Apply CTA",
+          "Positioning text"
+        ]
+      }
+    ],
+    "apis": [
+      {
+        "method": "POST",
+        "path": "/api/v1/auth/register",
+        "handler": "RegisterCommand",
+        "auth": "Public"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/auth/verify-otp",
+        "handler": "VerifyOtpCommand",
+        "auth": "Public"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/auth/token",
+        "handler": "TokenCommand",
+        "auth": "Public"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/auth/refresh",
+        "handler": "RefreshTokenCommand",
+        "auth": "Bearer"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/products",
+        "handler": "GetProductsQuery",
+        "auth": "Public"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/products/{id}",
+        "handler": "GetProductQuery",
+        "auth": "Public"
+      },
+      {
+        "method": "GET",
+        "path": "/health",
+        "handler": "HealthController",
+        "auth": "Public"
+      },
+      {
+        "method": "GET",
+        "path": "/health/ready",
+        "handler": "HealthController",
+        "auth": "Public"
+      }
+    ],
+    "tables": [
+      {
+        "name": "Users",
+        "columns": [
+          "Id (GUID PK)",
+          "PhoneNumber (encrypted)",
+          "PasswordHash",
+          "BiometricEnabled",
+          "CreatedAt",
+          "UpdatedAt",
+          "IsDeleted"
+        ]
+      },
+      {
+        "name": "Products",
+        "columns": [
+          "Id (GUID PK)",
+          "Name",
+          "Type (Cash/Combo/BridgeNow)",
+          "MinAmount",
+          "MaxAmount",
+          "MinTenure",
+          "MaxTenure",
+          "BaseRate",
+          "EarlyClosureFeePercent",
+          "AdminFeePercent",
+          "IsActive",
+          "CreatedAt"
+        ]
+      },
+      {
+        "name": "AuditLogs",
+        "columns": [
+          "Id (GUID PK)",
+          "UserId",
+          "Action",
+          "Resource",
+          "ResourceId",
+          "Changes",
+          "Reason",
+          "Timestamp"
+        ]
+      }
+    ]
+  },
+  "architecture_decisions": [
+    {
+      "id": "ADR-01",
+      "title": "Clean Architecture with CQRS for backend",
+      "context": "Need separation of concerns, testability, and scalability for a lending platform",
+      "decision": "Use .NET 8 Clean Architecture (Domain→Application→Infrastructure→Api) with MediatR CQRS",
+      "consequences": "More initial setup but better maintainability. Each handler is independently testable.",
+      "kb_reference": "EA2 Architecture Patterns"
+    },
+    {
+      "id": "ADR-02",
+      "title": "Kotlin/Jetpack Compose for mobile",
+      "context": "Need modern Android UI framework with good accessibility support",
+      "decision": "Use Kotlin 2.0 + Jetpack Compose + Material Design 3 + Hilt DI",
+      "consequences": "Compose-first approach. No XML layouts. All UI in Kotlin.",
+      "kb_reference": "EA1 Technology Stack, EA10 Mobile Architecture"
+    },
+    {
+      "id": "ADR-03",
+      "title": "JWT with device-bound refresh tokens",
+      "context": "Mobile app needs secure session management per SAMA requirements",
+      "decision": "JWT RS256 access tokens (15-min), refresh tokens (24hr, device-bound), stored in EncryptedSharedPreferences",
+      "consequences": "Short-lived access tokens reduce risk. Device binding prevents token theft.",
+      "kb_reference": "EA5 Security Architecture"
+    },
+    {
+      "id": "ADR-04",
+      "title": "In-memory database for development",
+      "context": "Need fast local development without SQL Server dependency",
+      "decision": "EF Core InMemoryDatabase for dev, SQL Server for staging/prod",
+      "consequences": "Dev starts instantly. Some EF Core features (transactions, raw SQL) behave differently in-memory.",
+      "kb_reference": "EA4 Data Architecture"
+    },
+    {
+      "id": "ADR-05",
+      "title": "Design system before features",
+      "context": "All screens need consistent look and feel from day one",
+      "decision": "Build design system (tokens + atoms) in Sprint 1 before any feature screens",
+      "consequences": "Sprint 1 has more infrastructure work but Sprint 2+ moves faster.",
+      "kb_reference": "EA11 Design System Standards"
+    }
+  ],
+  "risks": [
+    {
+      "risk": "SMS gateway integration may delay OTP delivery in Sprint 1",
+      "impact": "high",
+      "mitigation": "Use mock SMS service for dev/staging. Real integration can be swapped via DI."
+    },
+    {
+      "risk": "Sprint 1 has 57 story points — may be aggressive for a new team",
+      "impact": "medium",
+      "mitigation": "Scaffold stories (US-001, US-003) can be done by senior devs in parallel. Design system (US-002) can start day 1."
+    },
+    {
+      "risk": "Biometric auth (US-008) requires physical device testing",
+      "impact": "low",
+      "mitigation": "Use Android emulator fingerprint simulation for CI. Manual test on device before sprint review."
+    }
+  ],
+  "dependency_order": "F-01.2 (API scaffold) and F-01.1 (mobile scaffold) can start in parallel on day 1. F-01.3 (auth) depends on both scaffolds. F-01.4 (products) depends on API scaffold. Auth and products can run in parallel once scaffolds are ready.",
+  "reasoning": "Greenfield discovery for EP-01. Architecture decisions driven by EA1 (tech stack), EA2 (patterns), EA5 (security), EA10 (mobile), EA11 (design system). Domain context from PD1 (lending lifecycle — product discovery is the first step), PD18 (product configuration — BridgeNow params). Sprint 1 establishes the foundation that all subsequent sprints build on. The key risk is Sprint 1 velocity — mitigated by parallelising scaffold work."
+}

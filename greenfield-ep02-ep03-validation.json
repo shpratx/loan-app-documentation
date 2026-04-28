@@ -1,0 +1,207 @@
+{
+  "validation_result": "PASS",
+  "mode": "greenfield",
+  "mode_reasoning": "All 23 stories have change_type='new'. Sprint 1 foundation (EP-01) is implemented but Sprint 2 builds entirely new services (applications-service, assessment-service, offers-service) and new mobile screens. No existing_feature_ref or screens_affected references. Existing Sprint 1 docs found at design-docs/ but Sprint 2 is additive, not modifying.",
+
+  "epic_summary": [
+    {
+      "id": "EP-02",
+      "title": "Loan Application & Data Capture",
+      "description": "Build the complete application form: personal data, employment, income verification (API + Open Banking), and application submission.",
+      "features_count": 2,
+      "stories_count": 8,
+      "story_points": 30,
+      "sprint": 2,
+      "features": ["F-02.1 Application Form — Personal & Employment Data", "F-02.2 Income Verification & Offer Amount Calculation"],
+      "requirements_covered": ["FR-03", "FR-04", "FR-06", "FR-21"]
+    },
+    {
+      "id": "EP-03",
+      "title": "Assessment, Offer & Disbursement",
+      "description": "Build the decision engine, external verifications (CITC, SIMAH, geolocation), offer generation, contract signing, card collection, and disbursement.",
+      "features_count": 4,
+      "stories_count": 15,
+      "story_points": 56,
+      "sprint": 2,
+      "features": ["F-03.1 External Verifications", "F-03.2 Decision Engine", "F-03.3 Offer Generation, Display & Acceptance", "F-03.4 Card Collection & Disbursement"],
+      "requirements_covered": ["FR-05", "FR-07", "FR-08", "FR-09", "FR-14", "FR-15", "FR-18", "FR-22", "FR-23", "FR-28", "FR-29", "FR-30"]
+    }
+  ],
+
+  "classification": {
+    "ui_changes": [
+      {"story_id": "US-015", "title": "Application Form Wizard — Personal Details Step", "screens": ["ApplicationForm/PersonalStep"], "change_type": "new"},
+      {"story_id": "US-016", "title": "Application Form Wizard — Employment Details Step", "screens": ["ApplicationForm/EmploymentStep"], "change_type": "new"},
+      {"story_id": "US-017", "title": "Application Form Wizard — Income & Salary Step", "screens": ["ApplicationForm/IncomeStep"], "change_type": "new"},
+      {"story_id": "US-018", "title": "Application Form Wizard — Review & Submit Step", "screens": ["ApplicationForm/ReviewStep"], "change_type": "new"},
+      {"story_id": "US-019", "title": "Application Auto-Save & Resume", "screens": ["ApplicationForm/*"], "change_type": "new"},
+      {"story_id": "US-020", "title": "API Income Population", "screens": ["ApplicationForm/IncomeStep"], "change_type": "new"},
+      {"story_id": "US-021", "title": "Open Banking for Unlisted Companies", "screens": ["ApplicationForm/IncomeStep", "OpenBankingRedirect"], "change_type": "new"},
+      {"story_id": "US-022", "title": "Offer Amount Calculation Display", "screens": ["ApplicationForm/ReviewStep"], "change_type": "new"},
+      {"story_id": "US-023", "title": "CITC Employment Verification", "screens": ["VerificationStatus"], "change_type": "new"},
+      {"story_id": "US-024", "title": "Geolocation Verification", "screens": ["VerificationStatus"], "change_type": "new"},
+      {"story_id": "US-025", "title": "SIMAH Credit Bureau Check", "screens": ["VerificationStatus"], "change_type": "new"},
+      {"story_id": "US-026", "title": "Decision Engine — DBR & Affordability", "screens": ["DecisionResult"], "change_type": "new"},
+      {"story_id": "US-027", "title": "Decision Engine — Exposure & Eligibility", "screens": ["DecisionResult"], "change_type": "new"},
+      {"story_id": "US-028", "title": "Decision Engine — Referred Applications", "screens": ["ReferredStatus"], "change_type": "new"},
+      {"story_id": "US-029", "title": "Offer Generation", "screens": ["OfferScreen"], "change_type": "new"},
+      {"story_id": "US-030", "title": "Display Offer Details with No Early Closure Banner", "screens": ["OfferScreen"], "change_type": "new"},
+      {"story_id": "US-031", "title": "Accept Offer — Tawarruq Contract and E-Signature", "screens": ["ContractScreen"], "change_type": "new"},
+      {"story_id": "US-032", "title": "24-Hour SAMA Cooling-Off Period", "screens": ["CoolingOffScreen"], "change_type": "new"},
+      {"story_id": "US-033", "title": "Capture Debit Card via PCI-DSS Hosted Fields", "screens": ["CardCollectionScreen"], "change_type": "new"},
+      {"story_id": "US-034", "title": "3D Secure Verification for Debit Card", "screens": ["3DSChallengeScreen"], "change_type": "new"},
+      {"story_id": "US-035", "title": "Salary Date Capture and Dual Auto-Debit Setup", "screens": ["CardCollectionScreen"], "change_type": "new"},
+      {"story_id": "US-036", "title": "Second SIMAH Check Pre-Disbursement", "screens": ["DisbursementStatus"], "change_type": "new"},
+      {"story_id": "US-037", "title": "Disburse Loan Amount (Net of Admin Fee and VAT)", "screens": ["DisbursementConfirmation"], "change_type": "new"}
+    ],
+    "api_changes": [
+      {"story_id": "US-015", "endpoints": ["POST /applications"], "service": "applications-service"},
+      {"story_id": "US-018", "endpoints": ["POST /applications/{id}/submit"], "service": "applications-service"},
+      {"story_id": "US-019", "endpoints": ["PUT /applications/{id}/draft"], "service": "applications-service"},
+      {"story_id": "US-020", "endpoints": ["GET /applications/{id}/income"], "service": "applications-service"},
+      {"story_id": "US-021", "endpoints": ["POST /applications/{id}/open-banking"], "service": "applications-service"},
+      {"story_id": "US-023", "endpoints": ["POST /applications/{id}/verify/citc"], "service": "assessment-service"},
+      {"story_id": "US-024", "endpoints": ["POST /applications/{id}/verify/geolocation"], "service": "assessment-service"},
+      {"story_id": "US-025", "endpoints": ["POST /applications/{id}/verify/simah"], "service": "assessment-service"},
+      {"story_id": "US-026", "endpoints": ["POST /applications/{id}/assess"], "service": "assessment-service"},
+      {"story_id": "US-029", "endpoints": ["POST /applications/{id}/offer/generate"], "service": "offers-service"},
+      {"story_id": "US-031", "endpoints": ["POST /applications/{id}/offer/accept"], "service": "offers-service"},
+      {"story_id": "US-033", "endpoints": ["POST /applications/{id}/card"], "service": "offers-service"},
+      {"story_id": "US-036", "endpoints": ["POST /applications/{id}/verify/simah-2"], "service": "assessment-service"},
+      {"story_id": "US-037", "endpoints": ["POST /applications/{id}/disburse"], "service": "offers-service"}
+    ],
+    "integration_changes": [
+      {"story_id": "US-021", "systems": ["Open Banking AISP"]},
+      {"story_id": "US-023", "systems": ["CITC Employment API"]},
+      {"story_id": "US-024", "systems": ["Geolocation API"]},
+      {"story_id": "US-025", "systems": ["SIMAH Credit Bureau"]},
+      {"story_id": "US-033", "systems": ["Payment Processor — Hosted Fields SDK"]},
+      {"story_id": "US-034", "systems": ["Payment Processor — 3D Secure 2.0"]},
+      {"story_id": "US-036", "systems": ["SIMAH Credit Bureau (2nd check)"]},
+      {"story_id": "US-037", "systems": ["Payment Processor — Disbursement/Bank Transfer"]}
+    ],
+    "data_changes": [
+      {"story_id": "US-015", "tables": ["LoanApplications"]},
+      {"story_id": "US-016", "tables": ["LoanApplications"]},
+      {"story_id": "US-017", "tables": ["LoanApplications"]},
+      {"story_id": "US-019", "tables": ["LoanApplications (auto-save)"]},
+      {"story_id": "US-029", "tables": ["Offers"]},
+      {"story_id": "US-031", "tables": ["Contracts"]},
+      {"story_id": "US-033", "tables": ["DebitCards"]},
+      {"story_id": "US-035", "tables": ["AutoDebitSchedules"]},
+      {"story_id": "US-037", "tables": ["Loans (new — disbursement creates active loan)"]}
+    ]
+  },
+
+  "steps_required": {
+    "step3_ux_ui": true,
+    "step4_api_spec": true,
+    "step5_architecture": true,
+    "step6_hld_lld": true,
+    "step7_github": true,
+    "step8_tests": true
+  },
+
+  "existing_docs_found": {
+    "solution_architecture": true,
+    "hld": false,
+    "lld": true,
+    "api_spec": true,
+    "integration_architecture": true,
+    "design_system": true,
+    "wireframes": true,
+    "user_flows": true,
+    "baseline": true
+  },
+
+  "checklist": [
+    {"check": "1. Epic has title and description", "status": "pass", "detail": "EP-02: 'Loan Application & Data Capture' with full description. EP-03: 'Assessment, Offer & Disbursement' with full description."},
+    {"check": "2. Epic has scope_in and scope_out", "status": "pass", "detail": "EP-02: scope_in=6 items, scope_out=3 items. EP-03: scope_in=12 items, scope_out=4 items. Clear boundaries."},
+    {"check": "3. Epic has features with sufficient detail", "status": "pass", "detail": "EP-02: 2 features (F-02.1, F-02.2). EP-03: 4 features (F-03.1–F-03.4). Each has title, description, requirements_covered."},
+    {"check": "4. Each story has user_story in As a/I want/So that", "status": "pass", "detail": "All 23 stories have user_story in correct format. Verified 'As a' present in all."},
+    {"check": "5. Each story has acceptance_criteria in Given/When/Then", "status": "pass", "detail": "All 98 ACs across 23 stories use Given/When/Then format. Zero GWT violations."},
+    {"check": "6. Each story has data_sensitivity classification", "status": "pass", "detail": "All 23 stories have data_sensitivity: mix of Confidential (PII screens), Restricted (auth/payment), Public (display-only)."},
+    {"check": "7. Each story has change_type", "status": "pass", "detail": "All 23 stories have change_type='new' — consistent with greenfield Sprint 2 build."},
+    {"check": "8. Requirements traceability exists", "status": "warn", "detail": "Stories have citation.requirements_used referencing features (F-02.1, F-03.2) but NOT the underlying FR IDs (FR-03, FR-21). Traceability exists at feature→FR level in epics.json but not at story→FR level. Recommend adding requirements_covered field to each story mapping to specific FR IDs."},
+    {"check": "9. Brownfield: enhance stories have existing_context", "status": "pass", "detail": "N/A — all stories are change_type='new' (greenfield). No enhance/modify stories."},
+    {"check": "10. Brownfield: regression_criteria on enhance/modify", "status": "pass", "detail": "N/A — no enhance/modify stories. However, all stories DO have regression_criteria populated (good practice for Sprint 1 regression)."}
+  ],
+
+  "warnings": [
+    {
+      "id": "W1",
+      "severity": "medium",
+      "description": "Story-level FR traceability missing",
+      "detail": "All 23 stories lack a requirements_covered field mapping to FR IDs. Traceability exists at epic/feature level but not story level. This makes it harder to verify 100% FR coverage at the story level.",
+      "recommendation": "Add requirements_covered array to each story (e.g., US-015 → [FR-03, FR-21])."
+    },
+    {
+      "id": "W2",
+      "severity": "medium",
+      "description": "FR-13 (BridgeNow Product Tag) not explicitly covered by any story",
+      "detail": "EP-03 lists FR-13 in its requirements but no story AC explicitly mentions tagging applications with 'BridgeNow' product type. This may be implicit in US-015 (application creation) but should be explicit.",
+      "recommendation": "Add an AC to US-015 or US-018: 'Given the selected product is BridgeNow, When the application is created, Then it is tagged with productType=BridgeNow'."
+    },
+    {
+      "id": "W3",
+      "severity": "medium",
+      "description": "FR-18 (Multiple BridgeNow Loans) partially covered",
+      "detail": "FR-18 requires the decision engine to check existing BridgeNow exposure. US-027 covers exposure limits but doesn't explicitly mention checking for existing active BridgeNow loans.",
+      "recommendation": "Add an AC to US-027: 'Given the applicant has an existing active BridgeNow loan, When the exposure check runs, Then the combined exposure is validated against the limit'."
+    },
+    {
+      "id": "W4",
+      "severity": "low",
+      "description": "FR-09 (Zero Early Closure Fee) in EP-03 scope but is a Sprint 3 feature",
+      "detail": "EP-03 requirements_covered includes FR-09 (zero early closure fee). The offer display (US-030) shows 'No Early Closure' banner, but the actual settlement flow with zero fee is Sprint 3 (F-04.3). The Sprint 2 scope is correct (display only), but the FR mapping is misleading.",
+      "recommendation": "Clarify that Sprint 2 implements the display/configuration aspect of FR-09, while Sprint 3 implements the execution aspect."
+    },
+    {
+      "id": "W5",
+      "severity": "low",
+      "description": "No story for application status tracking screen",
+      "detail": "The state machine has 9 Sprint 2 states (Draft→Active) but no story explicitly covers an 'Application Status' screen where the customer can see their application progress through these states.",
+      "recommendation": "Consider adding a story for an application status/tracker screen, or confirm this is deferred to Sprint 3 dashboard."
+    },
+    {
+      "id": "W6",
+      "severity": "low",
+      "description": "US-037 creates a Loans table entry but BL5 doesn't list Loans as Sprint 2",
+      "detail": "US-037 (disbursement) transitions the application to 'Active' which implies creating a Loans record. BL5 lists the Loans table as Sprint 3. Either the disbursement story should NOT create the Loans record (just mark application as Disbursed), or BL5 should be updated.",
+      "recommendation": "Clarify: does disbursement create a Loans record or just update application status? If Loans record is needed, move Loans table to Sprint 2 in BL5."
+    }
+  ],
+
+  "domain_alignment": {
+    "payments_kb_coverage": {
+      "PD1_lending_lifecycle": "Covered — stories span Application→Disbursement stages",
+      "PD2_loan_origination": "Covered — US-015 to US-022 cover application data model, auto-save, income verification",
+      "PD3_affordability": "Covered — US-025 (SIMAH), US-026 (DBR 33%), US-027 (exposure limits)",
+      "PD4_pricing_fees": "Partially covered — admin fee + VAT in US-037, but no representative example story",
+      "PD5_loan_offers": "Covered — US-029 to US-032 cover offer generation, display, acceptance, cooling-off",
+      "PD6_disbursement": "Covered — US-036 (2nd SIMAH), US-037 (net disbursement)",
+      "PD9_payment_processing": "Covered — US-033 (card collection), US-034 (3DS), US-035 (auto-debit setup)",
+      "PD10_sca": "Covered — US-034 (3D Secure 2.0)",
+      "PD11_kyc": "Partially covered — national ID collected in US-015 but no dedicated KYC/identity verification story",
+      "PD14_gdpr": "Partially covered — data_sensitivity on all stories, FLAG_SECURE on PII screens, but no explicit consent capture story"
+    },
+    "sama_regulatory": {
+      "dbr_33_percent": "Covered in US-026 AC",
+      "1x_income_cap": "Covered in US-026 AC",
+      "min_sar_4000": "Covered in US-026 AC",
+      "cooling_off_24hr": "Covered in US-032 with 4 ACs",
+      "tawarruq_contract": "Covered in US-031",
+      "simah_dual_check": "Covered — US-025 (initial) + US-036 (pre-disbursement)"
+    }
+  },
+
+  "citation": {
+    "validator_prompt": "W01-step1-input-validator.md — 10-check validation checklist",
+    "domain_kb": "kb-L2-payments-domain (PD1-PD25) — lending lifecycle, origination, affordability, offers, disbursement",
+    "baseline": "greenfield-baseline.md (BL1-BL21) — Sprint 1 implemented, Sprint 2 planned scope",
+    "epics": "greenfield-epics.json — EP-02 (4 FRs, 2 features), EP-03 (11 FRs, 4 features)",
+    "stories": "greenfield-stories-sprint2.json — 23 stories, 98 ACs, 86 points"
+  },
+
+  "reasoning": "EP-02 and EP-03 pass validation with warnings. All 10 checklist items pass (Check 8 is a warn — traceability exists at feature level but not story level). The 23 stories cover the full loan origination pipeline from application form through disbursement. 98 acceptance criteria are well-structured in Given/When/Then format. 6 warnings identified: 3 medium (FR traceability gap, FR-13 implicit coverage, FR-18 partial coverage) and 3 low (FR-09 scope clarity, missing status screen, Loans table sprint assignment). None are blocking — pipeline can proceed to Step 2 (Discovery)."
+}

@@ -1,0 +1,285 @@
+{
+  "epic_ids": ["EP-02", "EP-03"],
+  "mode": "greenfield",
+  "mode_reasoning": "Sprint 2 builds 3 entirely new microservices (applications-service, assessment-service, offers-service) and 7+ new mobile screens. Sprint 1 foundation (auth-service, products-service, mobile scaffold) is reused but not modified in breaking ways. All 23 stories have change_type='new'.",
+
+  "discovery": {
+    "existing_components_analysed": [
+      {"type": "service", "path": "code/auth-service/", "relevance": "REUSE — JWT validation needed by new services; JwtService pattern reused; User entity referenced as FK in LoanApplications"},
+      {"type": "service", "path": "code/products-service/", "relevance": "REUSE — Product entity referenced as FK in LoanApplications; ProductType enum reused; DataSeeder pattern reused"},
+      {"type": "controller", "path": "code/auth-service/src/AuthService.Api/Controllers/AuthController.cs", "relevance": "REUSE — pattern template for new controllers"},
+      {"type": "entity", "path": "code/auth-service/src/AuthService.Domain/Entities/User.cs", "relevance": "REUSE — UserId FK in LoanApplications; may need NationalId field for SIMAH"},
+      {"type": "entity", "path": "code/products-service/src/ProductsService.Domain/Entities/Product.cs", "relevance": "REUSE — ProductId FK in LoanApplications; product params used in offer calculation"},
+      {"type": "middleware", "path": "code/auth-service/src/AuthService.Api/Middleware/", "relevance": "REUSE — CorrelationIdMiddleware and ExceptionMiddleware copied to new services"},
+      {"type": "screen", "path": "code/mobile-app/.../ui/navigation/Screen.kt", "relevance": "MODIFY — add 7+ new screen routes"},
+      {"type": "screen", "path": "code/mobile-app/.../ui/navigation/NavGraph.kt", "relevance": "MODIFY — add composable entries for new screens, wire onApply"},
+      {"type": "di_module", "path": "code/mobile-app/.../core/di/NetworkModule.kt", "relevance": "MODIFY — add @Named clients for applications-service, assessment-service, offers-service"},
+      {"type": "di_module", "path": "code/mobile-app/.../core/di/RepositoryModule.kt", "relevance": "MODIFY — add bindings for ApplicationRepository, OfferRepository"},
+      {"type": "theme", "path": "code/mobile-app/.../ui/theme/", "relevance": "REUSE — all design tokens, components, patterns"},
+      {"type": "core", "path": "code/mobile-app/.../core/UiState.kt", "relevance": "REUSE — generic sealed interface works for all new ViewModels"}
+    ],
+    "existing_docs_analysed": [
+      "design-docs/greenfield-baseline.md (BL1-BL21)",
+      "design-docs/arch/ep01-solution-architecture.md",
+      "design-docs/arch/ep01-lld.md",
+      "design-docs/arch/ep01-integration-architecture.md",
+      "design-docs/ui-ux/ep01-wireframes.md",
+      "design-docs/ui-ux/ep01-design-system.md",
+      "design-docs/greenfield-ep02-ep03-validation.json"
+    ]
+  },
+
+  "change_impact": {
+    "screens_modified": [
+      {
+        "route": "products/{id}",
+        "file": "ui/features/products/ProductDetailScreen.kt",
+        "current_behaviour": "onApply is a placeholder comment: /* Sprint 2: navController.navigate(\"apply/$it\") */",
+        "planned_change": "Wire onApply to navigate to ApplicationForm screen with productId argument",
+        "stories": ["US-015"],
+        "backward_compatible": true
+      }
+    ],
+    "screens_new": [
+      {"route": "apply/{productId}/personal", "purpose": "Application form step 1 — personal details (name, national ID, DOB, address)", "stories": ["US-015"]},
+      {"route": "apply/{productId}/employment", "purpose": "Application form step 2 — employment details (employer, type, start date)", "stories": ["US-016"]},
+      {"route": "apply/{productId}/income", "purpose": "Application form step 3 — income & salary (API-populated, Open Banking fallback)", "stories": ["US-017", "US-020", "US-021"]},
+      {"route": "apply/{productId}/review", "purpose": "Application form step 4 — review all data, offer amount preview, submit", "stories": ["US-018", "US-022"]},
+      {"route": "application/{id}/status", "purpose": "Application status tracker — shows verification/assessment progress", "stories": ["US-023", "US-024", "US-025", "US-026", "US-027", "US-028"]},
+      {"route": "application/{id}/offer", "purpose": "Offer display — amount, rate, tenure, monthly payment, 'No Early Closure' banner", "stories": ["US-029", "US-030"]},
+      {"route": "application/{id}/contract", "purpose": "Tawarruq contract display + e-signature + cooling-off countdown", "stories": ["US-031", "US-032"]},
+      {"route": "application/{id}/card", "purpose": "Debit card collection via hosted fields + salary date + 3DS", "stories": ["US-033", "US-034", "US-035"]},
+      {"route": "application/{id}/disbursement", "purpose": "Disbursement confirmation — net amount, admin fee, VAT, first payment date", "stories": ["US-037"]}
+    ],
+    "apis_new": [
+      {"endpoint": "/applications", "method": "POST", "service": "applications-service:5003", "purpose": "Create draft application", "request_schema": "CreateApplicationRequest(userId, productId)", "response_schema": "ApiResponse<ApplicationDto>", "stories": ["US-015"]},
+      {"endpoint": "/applications/{id}", "method": "PUT", "service": "applications-service:5003", "purpose": "Update application draft (auto-save)", "request_schema": "UpdateApplicationRequest(personal?, employment?, income?)", "response_schema": "ApiResponse<ApplicationDto>", "stories": ["US-015", "US-016", "US-017", "US-019"]},
+      {"endpoint": "/applications/{id}", "method": "GET", "service": "applications-service:5003", "purpose": "Get application with current status", "response_schema": "ApiResponse<ApplicationDto>", "stories": ["US-018"]},
+      {"endpoint": "/applications/{id}/submit", "method": "POST", "service": "applications-service:5003", "purpose": "Submit application — triggers assessment pipeline", "response_schema": "ApiResponse<ApplicationDto>", "stories": ["US-018"]},
+      {"endpoint": "/applications/{id}/income", "method": "GET", "service": "applications-service:5003", "purpose": "Fetch income data from employer API", "response_schema": "ApiResponse<IncomeDataDto>", "stories": ["US-020"]},
+      {"endpoint": "/applications/{id}/open-banking/initiate", "method": "POST", "service": "applications-service:5003", "purpose": "Initiate Open Banking consent redirect", "response_schema": "ApiResponse<OpenBankingRedirectDto>", "stories": ["US-021"]},
+      {"endpoint": "/applications/{id}/assess", "method": "POST", "service": "assessment-service:5004", "purpose": "Run full assessment pipeline (CITC + geo + SIMAH + DE)", "response_schema": "ApiResponse<AssessmentResultDto>", "stories": ["US-023", "US-024", "US-025", "US-026", "US-027", "US-028"]},
+      {"endpoint": "/applications/{id}/offer/generate", "method": "POST", "service": "offers-service:5005", "purpose": "Generate offer from approved assessment", "response_schema": "ApiResponse<OfferDto>", "stories": ["US-029"]},
+      {"endpoint": "/applications/{id}/offer", "method": "GET", "service": "offers-service:5005", "purpose": "Get current offer details", "response_schema": "ApiResponse<OfferDto>", "stories": ["US-030"]},
+      {"endpoint": "/applications/{id}/offer/accept", "method": "POST", "service": "offers-service:5005", "purpose": "Accept offer — sign contract, start cooling-off", "request_schema": "AcceptOfferRequest(signatureType, signatureData)", "response_schema": "ApiResponse<ContractDto>", "stories": ["US-031"]},
+      {"endpoint": "/applications/{id}/card", "method": "POST", "service": "offers-service:5005", "purpose": "Register card token + salary date", "request_schema": "RegisterCardRequest(cardToken, salaryDate)", "response_schema": "ApiResponse<CardRegistrationDto>", "stories": ["US-033", "US-035"]},
+      {"endpoint": "/applications/{id}/disburse", "method": "POST", "service": "offers-service:5005", "purpose": "Trigger disbursement (2nd SIMAH + fund transfer)", "response_schema": "ApiResponse<DisbursementDto>", "stories": ["US-036", "US-037"]}
+    ],
+    "apis_modified": [],
+    "handlers_new": [
+      {"handler": "CreateApplicationCommand", "pattern": "Command", "service": "applications-service", "stories": ["US-015"]},
+      {"handler": "UpdateApplicationCommand", "pattern": "Command", "service": "applications-service", "stories": ["US-015", "US-016", "US-017", "US-019"]},
+      {"handler": "GetApplicationQuery", "pattern": "Query", "service": "applications-service", "stories": ["US-018"]},
+      {"handler": "SubmitApplicationCommand", "pattern": "Command", "service": "applications-service", "stories": ["US-018"]},
+      {"handler": "GetIncomeDataQuery", "pattern": "Query", "service": "applications-service", "stories": ["US-020"]},
+      {"handler": "InitiateOpenBankingCommand", "pattern": "Command", "service": "applications-service", "stories": ["US-021"]},
+      {"handler": "AssessApplicationCommand", "pattern": "Command", "service": "assessment-service", "purpose": "Run full assessment: CITC employment, geolocation, SIMAH credit, decision engine (DBR ≤33%, 1x income cap for BridgeNow max SAR 30k, min SAR 4k, exposure limits)", "stories": ["US-023", "US-024", "US-025", "US-026", "US-027", "US-028"]},
+      {"handler": "GenerateOfferCommand", "pattern": "Command", "service": "offers-service", "stories": ["US-029"]},
+      {"handler": "GetOfferQuery", "pattern": "Query", "service": "offers-service", "stories": ["US-030"]},
+      {"handler": "AcceptOfferCommand", "pattern": "Command", "service": "offers-service", "stories": ["US-031"]},
+      {"handler": "RegisterCardCommand", "pattern": "Command", "service": "offers-service", "stories": ["US-033", "US-035"]},
+      {"handler": "DisburseCommand", "pattern": "Command", "service": "offers-service", "stories": ["US-036", "US-037"]}
+    ],
+    "handlers_modified": [],
+    "tables_new": [
+      {
+        "table": "LoanApplications",
+        "database": "applications-db",
+        "columns": "Id(Guid PK), UserId(Guid FK→Users), ProductId(Guid FK→Products), Status(enum), FullName, NationalId(encrypted), DateOfBirth(encrypted), Address, City, Region, EmployerName, EmploymentType, EmploymentStartDate, MonthlyIncome(encrypted), GrossIncome(encrypted), RequestedAmount, ApprovedAmount, Tenure, SalaryDate, IncomeSource(API|OpenBanking|Manual), CreatedAt, UpdatedAt, SubmittedAt, IsDeleted, Version",
+        "purpose": "Core application entity — tracks full lifecycle from Draft to Active",
+        "pii_encrypted": ["NationalId", "DateOfBirth", "MonthlyIncome", "GrossIncome"],
+        "stories": ["US-015", "US-016", "US-017", "US-018", "US-019"]
+      },
+      {
+        "table": "AssessmentResults",
+        "database": "assessment-db",
+        "columns": "Id(Guid PK), ApplicationId(Guid FK), CitcStatus(enum), CitcVerifiedAt, GeoStatus(enum), GeoVerifiedAt, SimahScore(int), SimahDbr(decimal), SimahCheckedAt, DeDecision(enum: Approved|Referred|Declined), DeReason, DecidedAt, CreatedAt",
+        "purpose": "Stores results of each verification step and final DE decision",
+        "stories": ["US-023", "US-024", "US-025", "US-026", "US-027", "US-028"]
+      },
+      {
+        "table": "Offers",
+        "database": "offers-db",
+        "columns": "Id(Guid PK), ApplicationId(Guid FK), Amount(decimal), Tenure(int), ProfitRate(decimal), AdminFeePercent(decimal), AdminFeeAmount(decimal), VatAmount(decimal), MonthlyPayment(decimal), TotalRepayment(decimal), NetDisbursement(decimal), ValidUntil(DateTime), Status(enum: Generated|Accepted|Expired|Voided), CreatedAt",
+        "purpose": "Generated offer with full financial breakdown",
+        "stories": ["US-029", "US-030"]
+      },
+      {
+        "table": "Contracts",
+        "database": "offers-db",
+        "columns": "Id(Guid PK), ApplicationId(Guid FK), OfferId(Guid FK), ContractType(Tawarruq), SignatureType(enum), SignatureData, SignedAt, CoolingPeriodEndsAt, Status(enum: Signed|CooledOff|Cancelled), CreatedAt",
+        "purpose": "Tawarruq contract with e-signature and cooling-off tracking",
+        "stories": ["US-031", "US-032"]
+      },
+      {
+        "table": "DebitCards",
+        "database": "offers-db",
+        "columns": "Id(Guid PK), ApplicationId(Guid FK), TokenReference(encrypted), Last4Digits, CardBrand, Is3dsVerified(bool), SalaryDate(int 1-28), PrimaryDebitDate(int), SecondaryDebitDate(int), IsActive(bool), CreatedAt",
+        "purpose": "Tokenised card reference with dual auto-debit schedule",
+        "stories": ["US-033", "US-034", "US-035"]
+      },
+      {
+        "table": "Disbursements",
+        "database": "offers-db",
+        "columns": "Id(Guid PK), ApplicationId(Guid FK), GrossAmount(decimal), AdminFee(decimal), VatOnAdminFee(decimal), NetAmount(decimal), Status(enum: Initiated|Completed|Failed), BankReference, DisbursedAt, CreatedAt",
+        "purpose": "Tracks disbursement with full fee breakdown",
+        "stories": ["US-037"]
+      }
+    ],
+    "tables_modified": [
+      {
+        "table": "Users (auth-service)",
+        "change": "add_column",
+        "details": "Add NationalId(string, encrypted, nullable) — needed for SIMAH lookup. Nullable for backward compatibility with existing users.",
+        "migration_needed": true,
+        "backward_compatible": true,
+        "stories": ["US-025", "US-036"]
+      }
+    ],
+    "integrations_new": [
+      {"system": "CITC Employment API", "protocol": "REST sync", "purpose": "Verify employment status and employer", "timeout": "30s", "circuit_breaker": "3 failures → open 60s", "fallback": "Application held in 'Pending Verification', logged to staging", "stories": ["US-023"]},
+      {"system": "Geolocation API", "protocol": "REST sync", "purpose": "Verify applicant location within Saudi Arabia", "timeout": "10s", "circuit_breaker": "3 failures → open 60s", "fallback": "Application held, logged to staging", "stories": ["US-024"]},
+      {"system": "SIMAH Credit Bureau", "protocol": "REST sync", "purpose": "Credit score + existing obligations for DBR calculation (initial + 2nd pre-disbursement)", "timeout": "30s", "circuit_breaker": "3 failures → open 120s", "fallback": "Application held in 'Pending Credit Check'", "stories": ["US-025", "US-036"]},
+      {"system": "Open Banking AISP", "protocol": "REST + OAuth redirect", "purpose": "Bank statement retrieval for unlisted company employees", "timeout": "N/A (redirect flow)", "fallback": "Manual income declaration accepted", "stories": ["US-021"]},
+      {"system": "Payment Processor — Hosted Fields", "protocol": "JavaScript SDK (iframe)", "purpose": "PCI-DSS SAQ A compliant card capture — PAN never touches BridgeNow backend", "stories": ["US-033"]},
+      {"system": "Payment Processor — 3D Secure", "protocol": "REST + redirect", "purpose": "SCA verification for card authentication", "stories": ["US-034"]},
+      {"system": "Payment Processor — Disbursement", "protocol": "REST async + webhook", "purpose": "Bank transfer of net loan amount to applicant account", "timeout": "60s", "circuit_breaker": "2 failures → hold", "stories": ["US-037"]}
+    ],
+    "integrations_affected": []
+  },
+
+  "mobile_modifications": {
+    "Screen.kt": {
+      "action": "ADD routes",
+      "new_routes": [
+        "data class ApplicationForm(val productId: String, val step: Int = 1) : Screen(\"apply/{productId}/{step}\")",
+        "data class ApplicationStatus(val applicationId: String) : Screen(\"application/{id}/status\")",
+        "data class Offer(val applicationId: String) : Screen(\"application/{id}/offer\")",
+        "data class Contract(val applicationId: String) : Screen(\"application/{id}/contract\")",
+        "data class CardCollection(val applicationId: String) : Screen(\"application/{id}/card\")",
+        "data class DisbursementConfirmation(val applicationId: String) : Screen(\"application/{id}/disbursement\")"
+      ]
+    },
+    "NavGraph.kt": {
+      "action": "ADD composable entries + wire onApply",
+      "changes": "6 new composable() blocks, ProductDetail.onApply → navigate to ApplicationForm"
+    },
+    "NetworkModule.kt": {
+      "action": "ADD 2 new Retrofit clients",
+      "new_clients": [
+        "@Named(\"applicationsClient\") → TasheelApplicationsApi (port 5003, with AuthInterceptor)",
+        "@Named(\"offersClient\") → TasheelOffersApi (port 5005, with AuthInterceptor)"
+      ],
+      "note": "Assessment service is called server-side only (not from mobile) — no mobile client needed"
+    },
+    "RepositoryModule.kt": {
+      "action": "ADD 2 new bindings",
+      "new_bindings": ["ApplicationRepository → ApplicationRepositoryImpl", "OfferRepository → OfferRepositoryImpl"]
+    },
+    "build.gradle.kts": {
+      "action": "ADD BuildConfig fields",
+      "new_fields": ["APPLICATIONS_BASE_URL", "OFFERS_BASE_URL"]
+    },
+    "strings.xml": {
+      "action": "ADD ~40 new strings",
+      "categories": ["Application form labels (personal, employment, income)", "Assessment status messages", "Offer display labels", "Contract/signature labels", "Card collection labels", "Disbursement confirmation labels", "New error messages"]
+    }
+  },
+
+  "architecture_decisions": [
+    {
+      "id": "ADR-06",
+      "title": "Assessment service is backend-only — mobile does not call it directly",
+      "context": "Assessment involves CITC, geolocation, SIMAH, and decision engine — all server-side operations triggered after application submission.",
+      "decision": "Mobile calls POST /applications/{id}/submit on applications-service. Applications-service orchestrates assessment-service internally via REST. Mobile polls GET /applications/{id} for status updates.",
+      "consequences": "Simpler mobile architecture (2 new API clients not 3). Assessment logic fully server-side. Mobile needs polling or push notification for status updates.",
+      "kb_reference": "EA2 (microservices), EA8 (integration patterns), MS6 (bulkhead isolation)"
+    },
+    {
+      "id": "ADR-07",
+      "title": "PCI-DSS SAQ A via payment processor hosted fields",
+      "context": "Card data (PAN, expiry, CVV) must never touch BridgeNow's backend or mobile app storage per PCI-DSS.",
+      "decision": "Use payment processor's JavaScript SDK (hosted iframe) for card capture. Only the tokenised reference is stored in DebitCards table.",
+      "consequences": "BridgeNow remains SAQ A (lowest PCI scope). Card collection screen uses WebView/iframe. Token stored encrypted at rest.",
+      "kb_reference": "PD9 (payment processing), EA5 (security), PD10 (SCA)"
+    },
+    {
+      "id": "ADR-08",
+      "title": "Offer calculation is server-side only",
+      "context": "Offer amount depends on verified income, SIMAH DBR, product parameters, and business rules that must not be exposed to the client.",
+      "decision": "Mobile displays read-only offer data from GET /applications/{id}/offer. All calculation happens in offers-service using assessment results + product config.",
+      "consequences": "No business logic leakage to mobile. Offer tampering impossible. Mobile is a pure display layer for financial data.",
+      "kb_reference": "PD4 (pricing), PD5 (loan offers), EA5 (security)"
+    },
+    {
+      "id": "ADR-09",
+      "title": "Cooling-off period tracked server-side with UTC timestamps",
+      "context": "24-hour SAMA cooling-off must be accurate regardless of client clock manipulation.",
+      "decision": "Contract.CoolingPeriodEndsAt is set server-side as UTC. Mobile displays countdown by comparing server timestamp (from GET /applications/{id}) against device clock. Timer is informational only — actual expiry enforced server-side.",
+      "consequences": "Tamper-proof cooling-off. Mobile timer may drift slightly from server but disbursement pipeline only proceeds after server-side expiry check.",
+      "kb_reference": "PD5 (right to withdraw), SAMA cooling-off regulation"
+    },
+    {
+      "id": "ADR-10",
+      "title": "Separate database per service for Sprint 2",
+      "context": "Three new services need data stores. EA2 mandates database-per-service.",
+      "decision": "applications-db (LoanApplications), assessment-db (AssessmentResults), offers-db (Offers, Contracts, DebitCards, Disbursements). InMemory for dev, SQL Server for staging/prod.",
+      "consequences": "No cross-service joins. Services communicate via REST APIs. Data consistency via eventual consistency patterns.",
+      "kb_reference": "EA2 (microservices), EA4 (data management), MS3 (database per service)"
+    }
+  ],
+
+  "risks": [
+    {"risk": "SIMAH API availability — external dependency with no SLA guarantee", "impact": "high", "mitigation": "Circuit breaker (3 failures → open 120s), retry with exponential backoff, application held in 'Pending' state, mock SIMAH for dev/test"},
+    {"risk": "Payment processor hosted fields SDK compatibility with Compose WebView", "impact": "high", "mitigation": "Spike in Sprint 2 week 1 to validate SDK in Android WebView. Fallback: native card form with immediate tokenisation API call (higher PCI scope)"},
+    {"risk": "Open Banking redirect flow UX — user leaves app and may not return", "impact": "medium", "mitigation": "Deep link callback to resume application. Auto-save before redirect. 30-minute session timeout with resume capability"},
+    {"risk": "Cooling-off timer accuracy across timezones", "impact": "medium", "mitigation": "All timestamps UTC server-side. Mobile displays local time conversion. Disbursement pipeline checks server UTC only"},
+    {"risk": "23 stories / 86 points in single sprint — capacity risk", "impact": "medium", "mitigation": "EP-02 (application form) can be delivered independently of EP-03 (assessment+disbursement). If needed, EP-03 can slip to Sprint 3 with EP-02 still deployable"},
+    {"risk": "NationalId column addition to Users table requires migration", "impact": "low", "mitigation": "Nullable column, no default needed. Zero-downtime migration. Existing users unaffected"}
+  ],
+
+  "dependency_order": [
+    "1. applications-service scaffold (Clean Architecture, DB, health) — foundation for all Sprint 2",
+    "2. assessment-service scaffold — needed for verification pipeline",
+    "3. offers-service scaffold — needed for offer/contract/card/disbursement",
+    "4. Mobile: ApplicationsApi + OffersApi + DTOs + domain models",
+    "5. Mobile: Screen routes + NavGraph wiring",
+    "6. EP-02 stories (US-015→US-022): Application form screens + auto-save + income",
+    "7. EP-03 F-03.1/F-03.2 (US-023→US-028): Assessment pipeline (CITC, geo, SIMAH, DE)",
+    "8. EP-03 F-03.3 (US-029→US-032): Offer generation, display, acceptance, cooling-off",
+    "9. EP-03 F-03.4 (US-033→US-037): Card collection, 3DS, dual auto-debit, 2nd SIMAH, disbursement"
+  ],
+
+  "sprint2_summary": {
+    "new_microservices": 3,
+    "new_mobile_screens": 9,
+    "new_api_endpoints": 12,
+    "new_cqrs_handlers": 12,
+    "new_database_tables": 6,
+    "modified_tables": 1,
+    "new_integrations": 7,
+    "new_adrs": 5,
+    "total_stories": 23,
+    "total_acs": 98,
+    "total_points": 86,
+    "reused_components": ["UiState<T>", "TasheelTheme", "Design tokens", "TasheelButton/TextField/Card", "HandleUiState", "ErrorState", "LoadingSkeleton", "AuthInterceptor", "CorrelationIdInterceptor", "MediatR pipeline pattern", "ExceptionMiddleware", "CorrelationIdMiddleware"],
+    "cross_cutting_concerns": [
+      "FLAG_SECURE on all PII screens (personal details, income, card collection, contract) and financial screens (offer, disbursement) per EA5",
+      "BridgeNow 1x income cap (max SAR 30,000) enforced in decision engine per FR-05/PD3",
+      "PII encryption at rest (NationalId, DOB, Income) via AES-256 per EA5/PD14",
+      "Auto-save on field blur or every 30 seconds per PD2",
+      "All new screens must have @Preview light+dark, contentDescription on interactive elements, 48dp touch targets per MC3/UC3"
+    ]
+  },
+
+  "citation": {
+    "discovery_prompt": "W01-step2-system-discovery.md — 18 rules, 8 reflection checks",
+    "baseline": "greenfield-baseline.md BL1-BL21 — Sprint 1 implemented state",
+    "architecture": "ep01-solution-architecture.md, ep01-integration-architecture.md, ep01-lld.md",
+    "domain_kb": "kb-L2-payments-domain PD1 (lifecycle), PD2 (origination), PD3 (affordability/DBR), PD4 (pricing), PD5 (offers), PD6 (disbursement), PD9 (payments), PD10 (SCA)",
+    "enterprise_kb": "kb-L1-enterprise-architecture EA2 (microservices), EA4 (data), EA5 (security), EA7 (resilience), EA8 (integrations)",
+    "validation": "greenfield-ep02-ep03-validation.json — PASS with 6 warnings"
+  },
+
+  "reasoning": "Sprint 2 is a major expansion: 3 new microservices, 9 new screens, 7 external integrations. The Sprint 1 foundation provides solid reusable patterns (Clean Architecture, MediatR CQRS, Compose MVVM, design system, DI modules) that significantly reduce boilerplate. The highest-risk items are the payment processor SDK integration (PCI-DSS hosted fields in Compose WebView) and SIMAH API reliability. The dependency order ensures the application form (EP-02) can be delivered independently, providing a deployable increment even if EP-03 assessment/disbursement encounters delays. All 23 stories map to at least one change_impact entry. No story is orphaned."
+}
