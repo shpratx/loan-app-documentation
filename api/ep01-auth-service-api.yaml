@@ -1,0 +1,376 @@
+openapi: 3.0.3
+info:
+  title: BridgeNow Auth Service
+  version: 0.1.0
+  description: 'Authentication microservice for BridgeNow Finance.
+
+    Handles registration, OTP verification, JWT token management, and biometric enrollment.
+
+
+    ## Standards
+
+    - RFC 7807 errors, camelCase JSON, X-Correlation-Id, Idempotency-Key on writes
+
+    - JWT RS256 (15-min access, 24hr device-bound refresh)
+
+    - OTP: 6-digit, 90s expiry, 3 per 10min rate limit
+
+    '
+servers:
+- url: http://localhost:5001/api/v1
+  description: Local development
+- url: https://auth.bridgenow.sa/api/v1
+  description: Production
+tags:
+- name: Auth
+  description: Registration, OTP, token management
+- name: Health
+  description: Service health
+security:
+- bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      operationId: registerUser
+      summary: Register new user and send OTP
+      tags:
+      - Auth
+      security: []
+      x-data-sensitivity: Confidential
+      x-audit-required: true
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - phoneNumber
+              properties:
+                phoneNumber:
+                  type: string
+                  pattern: ^\+966[0-9]{9}$
+                  description: Saudi phone number in E.164 format
+                  example: '+966512345678'
+      responses:
+        '200':
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      otpSent:
+                        type: boolean
+                        example: true
+                      expiresInSeconds:
+                        type: integer
+                        example: 90
+                      maskedPhone:
+                        type: string
+                        example: +966 5XX XXX XX78
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      summary: Verify OTP code
+      tags:
+      - Auth
+      security: []
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - phoneNumber
+              - otpCode
+              properties:
+                phoneNumber:
+                  type: string
+                  pattern: ^\+966[0-9]{9}$
+                  example: '+966512345678'
+                otpCode:
+                  type: string
+                  pattern: ^[0-9]{6}$
+                  example: '482931'
+      responses:
+        '200':
+          description: OTP verified — JWT tokens returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                invalid:
+                  value:
+                    type: invalid-otp
+                    title: Invalid OTP
+                    status: 401
+                    detail: Code is incorrect. 2 attempts remaining.
+                expired:
+                  value:
+                    type: otp-expired
+                    title: OTP Expired
+                    status: 401
+                    detail: Code has expired. Request a new one.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/token:
+    post:
+      operationId: loginWithCredentials
+      summary: Login with phone + OTP
+      tags:
+      - Auth
+      security: []
+      x-data-sensitivity: Restricted
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - phoneNumber
+              - otpCode
+              properties:
+                phoneNumber:
+                  type: string
+                  example: '+966512345678'
+                otpCode:
+                  type: string
+                  example: '482931'
+                deviceFingerprint:
+                  type: string
+                  description: Device ID for token binding
+                  example: android-abc123
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      x-audit-required: true
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      summary: Refresh access token
+      tags:
+      - Auth
+      x-data-sensitivity: Restricted
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                deviceFingerprint:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      x-audit-required: true
+  /health:
+    get:
+      operationId: healthLiveness
+      summary: Liveness probe
+      tags:
+      - Health
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Healthy
+                  service:
+                    type: string
+                    example: auth-service
+      x-data-sensitivity: Public
+  /health/ready:
+    get:
+      operationId: healthReadiness
+      summary: Readiness probe
+      tags:
+      - Health
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Healthy
+                  checks:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        example: Healthy
+                      smsGateway:
+                        type: string
+                        example: Healthy
+        '503':
+          description: Not ready
+      x-data-sensitivity: Public
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  headers:
+    CorrelationId:
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          example: 900
+        tokenType:
+          type: string
+          example: Bearer
+    ProblemDetails:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Unauthorized:
+      description: Auth failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+    InternalError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'

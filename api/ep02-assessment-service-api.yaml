@@ -1,0 +1,341 @@
+openapi: 3.0.3
+info:
+  title: BridgeNow Assessment Service
+  version: 0.1.0
+  description: 'Assessment microservice for BridgeNow Finance.
+
+    Runs the full credit-assessment pipeline: CITC employer verification, geo-fencing,
+    SIMAH credit check, and automated decisioning.
+
+
+    This service is called internally by applications-service after submission.
+    Not called directly by mobile clients (ADR-06).
+
+
+    ## Decision Rules
+
+    - SAMA DBR cap: 33% of gross salary
+
+    - BridgeNow 1x income cap: max SAR 30,000
+
+    - Minimum amount: SAR 4,000
+
+    - SIMAH score minimum: 500
+
+    - If any verification fails → Referred
+
+    - If SIMAH score < 500 or DBR > 33% → Declined
+
+
+    ## Standards
+
+    - RFC 7807 errors, camelCase JSON, X-Correlation-Id, Idempotency-Key on writes
+
+    '
+servers:
+- url: http://localhost:5004/api/v1
+  description: Local development
+- url: https://assessment.bridgenow.sa/api/v1
+  description: Production
+tags:
+- name: Assessment
+  description: Credit assessment pipeline
+- name: Health
+  description: Service health
+security:
+- bearerAuth: []
+paths:
+  /applications/{applicationId}/assess:
+    post:
+      operationId: assessApplication
+      summary: Run full assessment pipeline
+      tags:
+      - Assessment
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      parameters:
+      - name: applicationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Assessment completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AssessmentResultDto'
+              examples:
+                approved:
+                  summary: Approved application
+                  value:
+                    data:
+                      id: 99990000-aaaa-bbbb-cccc-ddddeeee0001
+                      applicationId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                      citcVerification:
+                        status: Passed
+                        employerName: Saudi Aramco
+                        verifiedAt: '2026-04-27T12:00:00Z'
+                      geoVerification:
+                        status: Passed
+                        verifiedAt: '2026-04-27T12:00:01Z'
+                      simahCheck:
+                        status: Passed
+                        score: 720
+                        dbr: 18.5
+                        checkedAt: '2026-04-27T12:00:02Z'
+                      decision:
+                        outcome: Approved
+                        reason: null
+                        approvedAmount: 25000
+                        decidedAt: '2026-04-27T12:00:03Z'
+                      createdAt: '2026-04-27T12:00:03Z'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /health:
+    get:
+      operationId: healthLiveness
+      summary: Liveness probe
+      tags:
+      - Health
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Healthy
+                  service:
+                    type: string
+                    example: assessment-service
+      x-data-sensitivity: Public
+  /health/ready:
+    get:
+      operationId: healthReadiness
+      summary: Readiness probe
+      tags:
+      - Health
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Healthy
+                  checks:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        example: Healthy
+                      simahApi:
+                        type: string
+                        example: Healthy
+                      citcApi:
+                        type: string
+                        example: Healthy
+                      geoApi:
+                        type: string
+                        example: Healthy
+        '503':
+          description: Not ready
+      x-data-sensitivity: Public
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  headers:
+    CorrelationId:
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    AssessmentResultDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        applicationId:
+          type: string
+          format: uuid
+        citcVerification:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+              - Passed
+              - Failed
+              - Pending
+              - Error
+            employerName:
+              type: string
+              example: Saudi Aramco
+            verifiedAt:
+              type: string
+              format: date-time
+        geoVerification:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+              - Passed
+              - Failed
+              - Pending
+              - Error
+            verifiedAt:
+              type: string
+              format: date-time
+        simahCheck:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+              - Passed
+              - Failed
+              - Pending
+              - Error
+            score:
+              type: integer
+              minimum: 0
+              maximum: 999
+              example: 720
+            dbr:
+              type: number
+              description: Debt Burden Ratio as percentage
+              example: 18.5
+            checkedAt:
+              type: string
+              format: date-time
+        decision:
+          type: object
+          properties:
+            outcome:
+              type: string
+              enum:
+              - Approved
+              - Referred
+              - Declined
+            reason:
+              type: string
+              nullable: true
+            approvedAmount:
+              type: number
+              nullable: true
+              example: 25000
+            decidedAt:
+              type: string
+              format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    ProblemDetails:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Unauthorized:
+      description: Auth failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: not-found
+            title: Not Found
+            status: 404
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+    InternalError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'

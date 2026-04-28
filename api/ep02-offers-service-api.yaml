@@ -1,0 +1,777 @@
+openapi: 3.0.3
+info:
+  title: BridgeNow Offers Service
+  version: 0.1.0
+  description: 'Offers microservice for BridgeNow Finance.
+
+    Manages offer generation, acceptance, card registration, and disbursement.
+
+
+    ## Standards
+
+    - RFC 7807 errors, camelCase JSON, X-Correlation-Id, Idempotency-Key on writes
+
+    - PD5 PCCI compliant offer disclosure (totalCostOfCredit = totalRepayment - amount)
+
+    - Tawarruq contract model with 24-hour SAMA cooling-off period
+
+    '
+servers:
+- url: http://localhost:5005/api/v1
+  description: Local development
+- url: https://offers.bridgenow.sa/api/v1
+  description: Production
+tags:
+- name: Offers
+  description: Offer generation and acceptance
+- name: Cards
+  description: Card registration and salary date
+- name: Disbursement
+  description: Loan disbursement
+- name: Health
+  description: Service health
+security:
+- bearerAuth: []
+paths:
+  /applications/{applicationId}/offer/generate:
+    post:
+      operationId: generateOffer
+      summary: Generate offer for application
+      tags:
+      - Offers
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Offer generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OfferDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/offer:
+    get:
+      operationId: getOffer
+      summary: Get offer details including all PD5 PCCI fields
+      description: 'Returns full offer details with all PD5 PCCI required fields:
+        amount, profitRatePercent, tenure, monthlyPayment, totalRepayment,
+        totalCostOfCredit, adminFeeAmount, vatAmount, netDisbursement.'
+      tags:
+      - Offers
+      x-data-sensitivity: Confidential
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Offer details with PD5 PCCI disclosure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OfferDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/offer/accept:
+    post:
+      operationId: acceptOffer
+      summary: Accept offer and sign contract
+      tags:
+      - Offers
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      x-sca-required: true
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptOfferRequest'
+      responses:
+        '200':
+          description: Offer accepted and contract signed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContractDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/card:
+    post:
+      operationId: registerCard
+      summary: Register card and salary date
+      tags:
+      - Cards
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      x-sca-required: true
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCardRequest'
+      responses:
+        '200':
+          description: Card registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CardRegistrationDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/disburse:
+    post:
+      operationId: disburseLoan
+      summary: Trigger disbursement
+      tags:
+      - Disbursement
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      x-sca-required: true
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Disbursement initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DisbursementDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/offer/cancel:
+    post:
+      operationId: cancelOffer
+      summary: Cancel offer during cooling-off period (SAMA regulatory)
+      tags:
+      - Offers
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      x-sca-required: true
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Offer cancelled, contract voided, no charges applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContractDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cooling-off period has expired — cancellation not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/offer/decline:
+    post:
+      operationId: declineOffer
+      summary: Decline offer — voids the offer
+      tags:
+      - Offers
+      x-data-sensitivity: Confidential
+      x-audit-required: true
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Offer declined
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OfferDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/contract:
+    get:
+      operationId: getContract
+      summary: Get contract details
+      tags:
+      - Offers
+      x-data-sensitivity: Restricted
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Contract details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContractDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/disbursement:
+    get:
+      operationId: getDisbursement
+      summary: Get disbursement details
+      tags:
+      - Disbursement
+      x-data-sensitivity: Confidential
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Disbursement details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DisbursementDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /health:
+    get:
+      operationId: healthLiveness
+      summary: Liveness probe
+      tags:
+      - Health
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Healthy
+                  service:
+                    type: string
+                    example: offers-service
+      x-data-sensitivity: Public
+  /health/ready:
+    get:
+      operationId: healthReadiness
+      summary: Readiness probe
+      tags:
+      - Health
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Healthy
+                  checks:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        example: Healthy
+                      paymentProcessor:
+                        type: string
+                        example: Healthy
+        '503':
+          description: Not ready
+      x-data-sensitivity: Public
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ApplicationId:
+      name: applicationId
+      in: path
+      required: true
+      description: Application identifier
+      schema:
+        type: string
+        format: uuid
+      example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  headers:
+    CorrelationId:
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    OfferDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: f1a2b3c4-d5e6-7890-abcd-ef1234567890
+        applicationId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        amount:
+          type: number
+          description: Principal finance amount in SAR
+          example: 12000
+        tenure:
+          type: integer
+          description: Repayment period in months
+          example: 24
+        profitRatePercent:
+          type: number
+          description: Annual profit rate percentage (PD5 PCCI field)
+          example: 27.0
+        adminFeePercent:
+          type: number
+          description: Administration fee as percentage of principal
+          example: 0.5
+        adminFeeAmount:
+          type: number
+          description: Calculated administration fee in SAR (amount × adminFeePercent / 100)
+          example: 60.0
+        vatAmount:
+          type: number
+          description: VAT on admin fee in SAR (15% of adminFeeAmount)
+          example: 9.0
+        monthlyPayment:
+          type: number
+          description: Monthly instalment amount in SAR (PD5 PCCI field)
+          example: 635.0
+        totalRepayment:
+          type: number
+          description: Total amount repayable over full tenure in SAR (PD5 PCCI field)
+          example: 15240.0
+        netDisbursement:
+          type: number
+          description: Amount credited to customer after deducting fees in SAR (amount - adminFeeAmount - vatAmount)
+          example: 11931.0
+        totalCostOfCredit:
+          type: number
+          description: Total cost of credit in SAR — totalRepayment minus amount (PD5 PCCI mandatory disclosure)
+          example: 3240.0
+        validUntil:
+          type: string
+          format: date-time
+          description: Offer expiry timestamp
+          example: '2026-05-04T17:00:00Z'
+        status:
+          type: string
+          enum:
+          - Generated
+          - Accepted
+          - Expired
+          - Voided
+          description: Current offer status
+          example: Generated
+        keySellingPoint:
+          type: string
+          nullable: true
+          description: Marketing highlight for the offer
+          example: No Early Closure Charges
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-27T17:00:00Z'
+    AcceptOfferRequest:
+      type: object
+      required:
+      - signatureType
+      - signatureData
+      properties:
+        signatureType:
+          type: string
+          enum:
+          - TypedName
+          - Biometric
+          description: Method used to sign the contract
+          example: TypedName
+        signatureData:
+          type: string
+          description: Signature payload — full name for TypedName or biometric token for Biometric
+          example: Mohammed Al-Rashid
+    ContractDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: c1d2e3f4-a5b6-7890-abcd-ef1234567890
+        applicationId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        offerId:
+          type: string
+          format: uuid
+          example: f1a2b3c4-d5e6-7890-abcd-ef1234567890
+        contractType:
+          type: string
+          enum:
+          - Tawarruq
+          description: Islamic finance contract type
+          example: Tawarruq
+        signedAt:
+          type: string
+          format: date-time
+          description: Timestamp when contract was signed
+          example: '2026-04-27T17:05:00Z'
+        coolingPeriodEndsAt:
+          type: string
+          format: date-time
+          description: End of 24-hour SAMA cooling-off period
+          example: '2026-05-07T17:05:00Z'
+        status:
+          type: string
+          enum:
+          - Signed
+          - CooledOff
+          - Cancelled
+          description: Current contract status
+          example: Signed
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-27T17:05:00Z'
+    RegisterCardRequest:
+      type: object
+      required:
+      - cardToken
+      - salaryDate
+      properties:
+        cardToken:
+          type: string
+          description: Tokenised card reference from payment processor
+          example: tok_4a8b2c1d3e5f
+        last4Digits:
+          type: string
+          pattern: ^[0-9]{4}$
+          description: Last 4 digits of the card number
+          example: '4532'
+        cardBrand:
+          type: string
+          description: Card network brand
+          example: Visa
+        salaryDate:
+          type: integer
+          minimum: 1
+          maximum: 28
+          description: Day of month salary is received (1-28)
+          example: 25
+    CardRegistrationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d1e2f3a4-b5c6-7890-abcd-ef1234567890
+        applicationId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        last4Digits:
+          type: string
+          description: Last 4 digits of the registered card
+          example: '4532'
+        cardBrand:
+          type: string
+          description: Card network brand
+          example: Visa
+        is3dsVerified:
+          type: boolean
+          description: Whether 3D Secure verification passed
+          example: true
+        salaryDate:
+          type: integer
+          description: Day of month salary is received
+          example: 25
+        primaryDebitDate:
+          type: integer
+          description: Primary auto-debit day (same as salaryDate)
+          example: 25
+        secondaryDebitDate:
+          type: integer
+          description: salaryDate + 3, wraps at month end
+          example: 28
+        isActive:
+          type: boolean
+          description: Whether the card registration is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-27T17:10:00Z'
+    DisbursementDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: e1f2a3b4-c5d6-7890-abcd-ef1234567890
+        applicationId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        grossAmount:
+          type: number
+          description: Total principal amount in SAR before deductions
+          example: 12000.0
+        adminFee:
+          type: number
+          description: Administration fee deducted in SAR
+          example: 60.0
+        vatOnAdminFee:
+          type: number
+          description: VAT charged on admin fee in SAR (15%)
+          example: 9.0
+        netAmount:
+          type: number
+          description: Net amount disbursed to customer in SAR (grossAmount - adminFee - vatOnAdminFee)
+          example: 11931.0
+        status:
+          type: string
+          enum:
+          - Initiated
+          - Completed
+          - Failed
+          description: Current disbursement status
+          example: Initiated
+        bankReference:
+          type: string
+          nullable: true
+          description: Bank transaction reference number
+          example: BN-2026042700001
+        disbursedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when funds were disbursed
+          example: '2026-04-27T17:15:00Z'
+        firstPaymentDate:
+          type: string
+          format: date
+          description: Date of first monthly payment
+          example: '2026-05-25'
+        monthlyPayment:
+          type: number
+          description: Monthly instalment amount in SAR
+          example: 635.0
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-27T17:15:00Z'
+    ProblemDetails:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: validation-error
+            title: Validation Failed
+            status: 400
+            detail: Request body contains invalid fields
+    Unauthorized:
+      description: Auth failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: unauthorized
+            title: Unauthorized
+            status: 401
+            detail: Bearer token is missing or invalid
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: not-found
+            title: Not Found
+            status: 404
+            detail: Application or offer not found
+    Conflict:
+      description: Conflict — duplicate or invalid state transition
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: conflict
+            title: Conflict
+            status: 409
+            detail: Offer has already been accepted
+    InternalError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: internal-error
+            title: Internal Server Error
+            status: 500

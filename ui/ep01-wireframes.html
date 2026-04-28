@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EP-01 Wireframes — BridgeNow Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#4f6ef7;--primary-hover:#3b5ae0;--primary-subtle:#eef1fe;--neutral-100:#ededf3;--neutral-200:#d5d7e2;--neutral-400:#858aad;--neutral-600:#5a5f7d;--neutral-900:#292c3d;--success:#2ecc71;--success-bg:#e8faf0;--warning:#f39c12;--error:#e74c3c;--error-bg:#fdedec;--surface:#fff;--bg:#f4f5f9;--font:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--neutral-900);font-size:14px}
+.page-title{text-align:center;padding:32px 0 8px;font-size:24px;font-weight:700}
+.page-sub{text-align:center;color:var(--neutral-400);font-size:13px;margin-bottom:32px}
+.phone-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:32px;padding:0 32px 48px}
+.screen-wrap{display:flex;flex-direction:column;align-items:center}
+.screen-label{font-size:12px;font-weight:600;color:var(--neutral-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.screen-meta{font-size:11px;color:var(--primary);margin-bottom:4px}
+.phone{width:375px;min-height:680px;background:var(--surface);border-radius:24px;border:2px solid var(--neutral-200);overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.1);display:flex;flex-direction:column}
+.status-bar{height:44px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:12px;color:var(--neutral-600)}
+.app-bar{height:48px;background:var(--surface);display:flex;align-items:center;padding:0 16px;gap:12px;border-bottom:1px solid var(--neutral-100)}
+.app-bar .back{font-size:18px;cursor:pointer;color:var(--neutral-600)}
+.app-bar .title{font-size:16px;font-weight:600;flex:1}
+.content{flex:1;padding:20px;overflow-y:auto}
+.bottom-nav{height:56px;background:var(--surface);border-top:1px solid var(--neutral-200);display:flex;align-items:center;justify-content:space-around;flex-shrink:0}
+.bottom-nav .ni{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--neutral-400)}.bottom-nav .ni.active{color:var(--primary)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;height:48px;border:none;border-radius:4px;font-size:14px;font-weight:500;font-family:var(--font);cursor:pointer}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-hover)}
+.btn-text{background:none;color:var(--primary);height:auto;font-size:13px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--neutral-600);margin-bottom:4px}
+.field input{width:100%;height:48px;padding:0 20px;border:2px solid var(--neutral-400);border-radius:8px;font-size:16px;font-family:var(--font);background:var(--surface);color:var(--neutral-900)}
+.field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.12)}
+.card{background:var(--surface);border-radius:6px;padding:20px;margin-bottom:16px;box-shadow:0 2px 4px rgba(0,0,0,.06);border:2px solid var(--neutral-200)}
+.card.highlight{border-color:var(--primary)}
+.badge{display:inline-flex;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600}
+.badge-success{background:var(--success-bg);color:#1a9c55}
+.badge-info{background:var(--primary-subtle);color:var(--primary)}
+.hero{background:var(--primary-subtle);border-radius:12px;padding:24px;text-align:center;margin-bottom:20px}
+.hero h2{font-size:24px;font-weight:700;color:var(--primary)}
+.hero p{font-size:16px;color:var(--neutral-600);margin-top:8px}
+.kv{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--neutral-100);font-size:14px}
+.kv:last-child{border:none}.kv .k{color:var(--neutral-600)}.kv .v{font-weight:600}
+.info-banner{background:var(--primary-subtle);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--primary);margin-bottom:16px}
+.otp-row{display:flex;gap:8px;justify-content:center;margin:20px 0}
+.otp-box{width:48px;height:48px;border:2px solid var(--neutral-400);border-radius:8px;text-align:center;font-size:20px;font-weight:600;font-family:var(--font)}
+.otp-box:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(79,110,247,.12)}
+.timer{text-align:center;font-size:13px;color:var(--neutral-400);margin-bottom:16px}
+.error-text{font-size:13px;color:var(--error);margin-top:8px}
+.divider-text{text-align:center;color:var(--neutral-400);font-size:13px;margin:20px 0}
+.security-tag{display:inline-block;background:var(--error-bg);color:var(--error);font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:8px}
+.api-tag{display:inline-block;background:var(--primary-subtle);color:var(--primary);font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;margin-left:8px}
+</style>
+</head>
+<body>
+<h1 class="page-title">EP-01 Wireframes — BridgeNow Finance</h1>
+<p class="page-sub">Sprint 1 · Greenfield · 4 Screens · Design System Tokens Applied</p>
+
+<div class="phone-grid">
+
+<!-- A. LOGIN -->
+<div class="screen-wrap">
+<div class="screen-label">A. Login</div>
+<div class="screen-meta">POST /api/v1/auth/register <span class="security-tag">🔒 FLAG_SECURE</span></div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1">
+    <div style="font-size:48px;margin-bottom:8px">🏦</div>
+    <div style="font-size:32px;font-weight:700;margin-bottom:40px">Tasheel Finance</div>
+    <div style="width:100%">
+      <div class="field">
+        <label>Phone Number</label>
+        <input placeholder="+966 5XX XXX XXXX" value="+966 512 345 678" aria-label="Phone number">
+      </div>
+      <button class="btn btn-primary" aria-label="Send verification code">SEND OTP</button>
+      <div class="divider-text">── or sign in with ──</div>
+      <button class="btn btn-text" aria-label="Sign in with fingerprint">👆 Biometric Login</button>
+      <div style="font-size:11px;color:var(--neutral-400);text-align:center;margin-top:4px">(Only shown if biometric enrolled)</div>
+      <div class="error-text" style="text-align:center;margin-top:16px">⚠️ Invalid phone number format</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- B. OTP -->
+<div class="screen-wrap">
+<div class="screen-label">B. OTP Verification</div>
+<div class="screen-meta">POST /api/v1/auth/verify-otp → /token <span class="security-tag">🔒 FLAG_SECURE</span></div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">Verify Phone</span></div>
+  <div class="content">
+    <p style="font-size:16px;margin-bottom:4px">Enter the 6-digit code sent to</p>
+    <p style="font-size:16px;font-weight:600;margin-bottom:24px">+966 5XX XXX XX78</p>
+    <div class="otp-row">
+      <input class="otp-box" maxlength="1" value="4" aria-label="Digit 1 of 6">
+      <input class="otp-box" maxlength="1" value="8" aria-label="Digit 2 of 6">
+      <input class="otp-box" maxlength="1" value="2" aria-label="Digit 3 of 6">
+      <input class="otp-box" maxlength="1" aria-label="Digit 4 of 6">
+      <input class="otp-box" maxlength="1" aria-label="Digit 5 of 6">
+      <input class="otp-box" maxlength="1" aria-label="Digit 6 of 6">
+    </div>
+    <div class="timer">⏱️ Code expires in 01:30</div>
+    <div style="text-align:center;margin-bottom:24px">
+      <span style="font-size:13px;color:var(--neutral-600)">Didn't receive code? </span>
+      <button class="btn-text" style="display:inline" aria-label="Resend verification code">Resend Code</button>
+    </div>
+    <div class="error-text" style="text-align:center">⚠️ Invalid code — 2 attempts remaining</div>
+    <div class="error-text" style="text-align:center;color:var(--warning)">⏰ Code expired — request a new code</div>
+    <div class="error-text" style="text-align:center">🚫 Too many attempts — try again in 10 minutes</div>
+    <div style="margin-top:24px">
+      <button class="btn btn-primary" aria-label="Verify code">VERIFY</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- C. PRODUCT LIST -->
+<div class="screen-wrap">
+<div class="screen-label">C. Product List</div>
+<div class="screen-meta">GET /api/v1/products</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span style="font-size:18px">☰</span><span class="title">Our Products</span><span style="font-size:18px">🔔</span></div>
+  <div class="content" style="flex:1">
+    <div class="card highlight" aria-label="BridgeNow Finance product. SAR 4,000 to 30,000. 24 months. No early closure charges.">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span>⭐</span>
+        <span style="font-size:16px;font-weight:600">BridgeNow Finance</span>
+      </div>
+      <div style="font-size:13px;color:var(--neutral-600);margin-bottom:4px">"Easy Salary Advance"</div>
+      <div style="font-size:14px;margin-bottom:4px">SAR 4,000 – 30,000</div>
+      <div style="font-size:13px;color:var(--neutral-600);margin-bottom:8px">24 months · 27% p.a.</div>
+      <div style="margin-bottom:12px"><span class="badge badge-success">✨ No Early Closure Charges</span></div>
+      <button class="btn btn-primary" style="height:40px;font-size:13px" aria-label="Apply for BridgeNow Finance">Apply Now</button>
+    </div>
+    <div class="card" aria-label="Cash Finance product. SAR 5,000 to 250,000. 3 to 60 months.">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span>🏦</span>
+        <span style="font-size:16px;font-weight:600">Cash Finance</span>
+      </div>
+      <div style="font-size:14px;margin-bottom:4px">SAR 5,000 – 250,000</div>
+      <div style="font-size:13px;color:var(--neutral-600);margin-bottom:12px">3–60 months · From 15% p.a.</div>
+      <button class="btn btn-primary" style="height:40px;font-size:13px" aria-label="Apply for Cash Finance">Apply Now</button>
+    </div>
+    <div class="card" aria-label="Combo Finance product. SAR 10,000 to 500,000. 6 to 60 months.">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span>💳</span>
+        <span style="font-size:16px;font-weight:600">Combo Finance</span>
+      </div>
+      <div style="font-size:14px;margin-bottom:4px">SAR 10,000 – 500,000</div>
+      <div style="font-size:13px;color:var(--neutral-600);margin-bottom:12px">6–60 months · From 18% p.a.</div>
+      <button class="btn btn-primary" style="height:40px;font-size:13px" aria-label="Apply for Combo Finance">Apply Now</button>
+    </div>
+    <div style="margin-top:16px;padding:16px;background:var(--neutral-100);border-radius:6px">
+      <div style="font-size:11px;font-weight:600;color:var(--neutral-400);margin-bottom:8px">LOADING STATE (skeleton)</div>
+      <div style="height:16px;width:60%;background:linear-gradient(90deg,var(--neutral-100),var(--neutral-200),var(--neutral-100));border-radius:4px;margin-bottom:8px"></div>
+      <div style="height:12px;width:80%;background:linear-gradient(90deg,var(--neutral-100),var(--neutral-200),var(--neutral-100));border-radius:4px;margin-bottom:8px"></div>
+      <div style="height:12px;width:40%;background:linear-gradient(90deg,var(--neutral-100),var(--neutral-200),var(--neutral-100));border-radius:4px"></div>
+    </div>
+    <div style="margin-top:12px;padding:16px;background:var(--error-bg);border-radius:6px;text-align:center">
+      <div style="font-size:11px;font-weight:600;color:var(--error);margin-bottom:4px">ERROR STATE</div>
+      <div style="font-size:13px;color:var(--neutral-600)">⚠️ Failed to load products</div>
+      <button class="btn-text" style="margin-top:4px;font-size:12px">Retry</button>
+    </div>
+    <div style="margin-top:12px;padding:16px;background:var(--neutral-100);border-radius:6px;text-align:center">
+      <div style="font-size:11px;font-weight:600;color:var(--neutral-400);margin-bottom:4px">EMPTY STATE</div>
+      <div style="font-size:13px;color:var(--neutral-600)">No products available</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="ni active" aria-label="Home tab, selected"><span>🏠</span>Home</div>
+    <div class="ni" aria-label="Products tab"><span>📋</span>Products</div>
+    <div class="ni" aria-label="Profile tab"><span>👤</span>Profile</div>
+  </div>
+</div>
+</div>
+
+<!-- D. BRIDGENOW LANDING -->
+<div class="screen-wrap">
+<div class="screen-label">D. BridgeNow Landing</div>
+<div class="screen-meta">GET /api/v1/products/{id}</div>
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="app-bar"><span class="back">←</span><span class="title">BridgeNow Finance</span></div>
+  <div class="content" style="flex:1">
+    <div class="hero">
+      <h2>✨ No Early Closure Charges</h2>
+      <p>Easy Salary Advance for your immediate needs</p>
+    </div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:12px">Product Details</div>
+    <div class="card" style="padding:0">
+      <div class="kv" style="padding:12px 20px"><span class="k">Loan Amount</span><span class="v">1x Income (max SAR 30k)</span></div>
+      <div class="kv" style="padding:12px 20px"><span class="k">Tenure</span><span class="v">24 months</span></div>
+      <div class="kv" style="padding:12px 20px"><span class="k">Profit Rate</span><span class="v">27% p.a.</span></div>
+      <div class="kv" style="padding:12px 20px"><span class="k">Early Closure</span><span class="v"><span class="badge badge-success">FREE ✅</span></span></div>
+      <div class="kv" style="padding:12px 20px"><span class="k">Admin Fee</span><span class="v">0.5% + VAT</span></div>
+      <div class="kv" style="padding:12px 20px"><span class="k">Min Amount</span><span class="v">SAR 4,000</span></div>
+    </div>
+    <div class="info-banner">ℹ️ Your offer amount will be calculated based on your verified income</div>
+    <button class="btn btn-primary" aria-label="Start BridgeNow application">Apply for BridgeNow</button>
+  </div>
+</div>
+</div>
+
+</div>
+
+<div style="text-align:center;padding:24px;color:var(--neutral-400);font-size:12px">
+  EP-01 Sprint 1 · 4 Screens · Design tokens: Primary #4F6EF7, Neutral-900 #292C3D, Radius 4/6/8dp, Touch 48dp · WCAG 2.1 AA
+</div>
+</body>
+</html>

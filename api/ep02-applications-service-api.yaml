@@ -1,0 +1,777 @@
+openapi: 3.0.3
+info:
+  title: BridgeNow Applications Service
+  version: 0.1.0
+  description: 'Loan application microservice for BridgeNow Finance.
+
+    Handles application creation, auto-save drafts, income verification, Open Banking
+    consent, and submission for credit assessment.
+
+
+    ## Standards
+
+    - RFC 7807 errors, camelCase JSON, X-Correlation-Id, Idempotency-Key on writes
+
+    - JWT RS256 bearer token required on all endpoints
+
+    - All dates ISO 8601, all enums PascalCase
+
+    '
+servers:
+- url: http://localhost:5003/api/v1
+  description: Local development
+- url: https://applications.bridgenow.sa/api/v1
+  description: Production
+tags:
+- name: Applications
+  description: Loan application lifecycle
+- name: Health
+  description: Service health
+security:
+- bearerAuth: []
+paths:
+  /applications:
+    get:
+      operationId: listApplications
+      summary: List applications for the authenticated user
+      tags:
+      - Applications
+      x-data-sensitivity: Confidential
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [Draft, Submitted, Verifying, Approved, Referred, Declined, OfferGenerated, OfferAccepted, Disbursing, Active]
+      - name: pageNumber
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApplicationDto'
+                  meta:
+                    type: object
+                    properties:
+                      pageNumber:
+                        type: integer
+                      pageSize:
+                        type: integer
+                      totalCount:
+                        type: integer
+                      totalPages:
+                        type: integer
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      operationId: createApplication
+      summary: Create draft application
+      tags:
+      - Applications
+      x-data-sensitivity: Confidential
+      x-audit-required: true
+      parameters:
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApplicationRequest'
+      responses:
+        '201':
+          description: Application created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApplicationDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}:
+    put:
+      operationId: updateApplication
+      summary: Update draft application (auto-save)
+      tags:
+      - Applications
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApplicationRequest'
+      responses:
+        '200':
+          description: Application updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApplicationDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    get:
+      operationId: getApplication
+      summary: Get application with status
+      tags:
+      - Applications
+      x-data-sensitivity: Confidential
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Application details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApplicationDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/submit:
+    post:
+      operationId: submitApplication
+      summary: Submit application for assessment
+      tags:
+      - Applications
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      x-sca-required: true
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - termsAccepted
+              properties:
+                termsAccepted:
+                  type: boolean
+                  description: Customer confirms information accuracy and accepts terms
+                  example: true
+      responses:
+        '200':
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApplicationDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/income:
+    get:
+      operationId: getIncomeData
+      summary: Fetch income data from employer API
+      tags:
+      - Applications
+      x-data-sensitivity: Restricted
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Income data retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/IncomeDataDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/open-banking/initiate:
+    post:
+      operationId: initiateOpenBanking
+      summary: Initiate Open Banking consent flow
+      tags:
+      - Applications
+      x-data-sensitivity: Restricted
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Open Banking redirect initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OpenBankingRedirectDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /applications/{applicationId}/open-banking/callback:
+    post:
+      operationId: openBankingCallback
+      summary: Receive Open Banking consent callback
+      tags:
+      - Applications
+      x-data-sensitivity: Restricted
+      parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - consentId
+              - status
+              properties:
+                consentId:
+                  type: string
+                  format: uuid
+                  description: Consent ID from Open Banking provider
+                status:
+                  type: string
+                  enum: [Authorized, Rejected, Error]
+                  description: Consent authorization result
+      responses:
+        '200':
+          description: Callback processed, income data updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/IncomeDataDto'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /health:
+    get:
+      operationId: healthLiveness
+      summary: Liveness probe
+      tags:
+      - Health
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Service health status
+                    example: Healthy
+                  service:
+                    type: string
+                    description: Service name
+                    example: applications-service
+      x-data-sensitivity: Public
+  /health/ready:
+    get:
+      operationId: healthReadiness
+      summary: Readiness probe
+      tags:
+      - Health
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Overall readiness status
+                    example: Healthy
+                  checks:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        description: Database connectivity status
+                        example: Healthy
+        '503':
+          description: Not ready
+      x-data-sensitivity: Public
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ApplicationId:
+      name: applicationId
+      in: path
+      required: true
+      description: Unique application identifier
+      schema:
+        type: string
+        format: uuid
+      example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  headers:
+    CorrelationId:
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    CreateApplicationRequest:
+      type: object
+      required:
+      - userId
+      - productId
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: Unique identifier of the applicant user
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        productId:
+          type: string
+          format: uuid
+          description: Unique identifier of the selected finance product
+          example: 11111111-1111-1111-1111-111111111111
+    UpdateApplicationRequest:
+      type: object
+      properties:
+        personal:
+          $ref: '#/components/schemas/PersonalDetails'
+        employment:
+          $ref: '#/components/schemas/EmploymentDetails'
+        income:
+          $ref: '#/components/schemas/IncomeDetails'
+    PersonalDetails:
+      type: object
+      properties:
+        fullName:
+          type: string
+          description: Applicant full name
+          example: Ahmed Al Fahad
+        nationalId:
+          type: string
+          description: National ID number
+          example: '1234567890'
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth in ISO 8601 format
+          example: '1990-01-15'
+        address:
+          type: string
+          description: Street address
+          example: 123 King Fahd Road
+        city:
+          type: string
+          description: City of residence
+          example: Riyadh
+        region:
+          type: string
+          description: Administrative region
+          example: Riyadh Region
+    EmploymentDetails:
+      type: object
+      properties:
+        employerName:
+          type: string
+          description: Name of the employer
+          example: Saudi Aramco
+        employmentType:
+          type: string
+          enum:
+          - Employed
+          - SelfEmployed
+          - Retired
+          description: Type of employment
+          example: Employed
+        employmentStartDate:
+          type: string
+          format: date
+          description: Employment start date in ISO 8601 format
+          example: '2018-06-01'
+    IncomeDetails:
+      type: object
+      properties:
+        monthlyIncome:
+          type: number
+          description: Net monthly income in SAR
+          example: 15000.00
+        grossIncome:
+          type: number
+          description: Gross monthly income in SAR
+          example: 18000.00
+        incomeSource:
+          type: string
+          enum:
+          - Api
+          - OpenBanking
+          - Manual
+          description: Source of income verification
+          example: Api
+        salaryDate:
+          type: integer
+          minimum: 1
+          maximum: 28
+          description: Day of month salary is received (1-28)
+          example: 25
+    ApplicationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique application identifier
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        userId:
+          type: string
+          format: uuid
+          description: Applicant user identifier
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        productId:
+          type: string
+          format: uuid
+          description: Selected finance product identifier
+          example: 11111111-1111-1111-1111-111111111111
+        status:
+          type: string
+          enum:
+          - Draft
+          - Submitted
+          - Verifying
+          - Approved
+          - Referred
+          - Declined
+          - OfferGenerated
+          - OfferAccepted
+          - Disbursing
+          - Active
+          description: Current application status
+          example: Draft
+        personal:
+          $ref: '#/components/schemas/PersonalDetails'
+        employment:
+          $ref: '#/components/schemas/EmploymentDetails'
+        income:
+          $ref: '#/components/schemas/IncomeDetails'
+        requestedAmount:
+          type: number
+          description: Amount requested by the applicant in SAR
+          example: 25000.00
+        approvedAmount:
+          type: number
+          nullable: true
+          description: Amount approved after assessment in SAR
+          example: 20000.00
+        createdAt:
+          type: string
+          format: date-time
+          description: Application creation timestamp in ISO 8601
+          example: '2026-04-27T10:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp in ISO 8601
+          example: '2026-04-27T12:30:00Z'
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Submission timestamp in ISO 8601
+          example: '2026-04-27T14:00:00Z'
+    IncomeDataDto:
+      type: object
+      properties:
+        monthlyIncome:
+          type: number
+          description: Verified net monthly income in SAR
+          example: 15000.00
+        grossIncome:
+          type: number
+          description: Verified gross monthly income in SAR
+          example: 18000.00
+        employerName:
+          type: string
+          description: Verified employer name
+          example: Saudi Aramco
+        verifiedAt:
+          type: string
+          format: date-time
+          description: Timestamp of income verification in ISO 8601
+          example: '2026-04-27T11:00:00Z'
+        source:
+          type: string
+          description: Source of income data
+          example: Api
+        eligibleAmount:
+          type: number
+          description: Server-calculated eligible offer amount (1x income, capped SAR 30,000, floored SAR 4,000)
+          example: 15000.00
+          readOnly: true
+        isEligible:
+          type: boolean
+          description: Whether income meets minimum eligibility threshold
+          example: true
+          readOnly: true
+        rejectionReason:
+          type: string
+          nullable: true
+          description: Reason for ineligibility if isEligible is false
+          example: null
+          readOnly: true
+    OpenBankingRedirectDto:
+      type: object
+      properties:
+        redirectUrl:
+          type: string
+          format: uri
+          description: URL to redirect the user for Open Banking consent
+          example: https://openbanking.example.sa/consent?id=abc123
+        consentId:
+          type: string
+          description: Unique consent identifier for tracking
+          example: consent-a1b2c3d4
+        expiresAt:
+          type: string
+          format: date-time
+          description: Consent link expiry timestamp in ISO 8601
+          example: '2026-04-27T11:15:00Z'
+    ProblemDetails:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          description: Error type URI
+          example: validation-error
+        title:
+          type: string
+          description: Short human-readable summary
+          example: Validation Failed
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        detail:
+          type: string
+          description: Detailed error explanation
+          example: One or more fields failed validation
+        errors:
+          type: array
+          description: Field-level validation errors
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field that failed validation
+                example: monthlyIncome
+              message:
+                type: string
+                description: Validation error message
+                example: Must be a positive number
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: validation-error
+            title: Validation Failed
+            status: 400
+            detail: One or more fields failed validation
+    Unauthorized:
+      description: Auth failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: unauthorized
+            title: Unauthorized
+            status: 401
+            detail: Invalid or expired token
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: not-found
+            title: Not Found
+            status: 404
+            detail: Application not found
+    UnprocessableEntity:
+      description: Business rule violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: unprocessable-entity
+            title: Unprocessable Entity
+            status: 422
+            detail: Application cannot be submitted in current state
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: rate-limited
+            title: Too Many Requests
+            status: 429
+            detail: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+    InternalError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: internal-error
+            title: Internal Server Error
+            status: 500
+            detail: An unexpected error occurred

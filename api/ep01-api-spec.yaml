@@ -1,0 +1,491 @@
+openapi: "3.0.3"
+info:
+  title: "BridgeNow Finance API"
+  version: "0.1.0"
+  description: |
+    RESTful API for BridgeNow Finance lending platform.
+    Sprint 1: Authentication + Product Catalogue.
+    
+    ## Authentication
+    All endpoints require Bearer JWT unless marked as public.
+    
+    ## Error Handling
+    All errors follow RFC 7807 Problem Details format.
+    
+    ## Headers
+    - `X-Correlation-Id`: Auto-generated UUID for distributed tracing
+    - `Idempotency-Key`: Required on all POST/PUT/PATCH requests
+  contact:
+    name: "BridgeNow API Team"
+
+servers:
+  - url: "http://localhost:5000/api/v1"
+    description: "Local development"
+  - url: "https://api-staging.bridgenow.sa/api/v1"
+    description: "Staging"
+  - url: "https://api.bridgenow.sa/api/v1"
+    description: "Production"
+
+tags:
+  - name: Auth
+    description: "Registration, OTP verification, token management"
+  - name: Products
+    description: "Product catalogue and configuration"
+  - name: Health
+    description: "Service health and readiness"
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      operationId: registerUser
+      summary: "Register new user and send OTP"
+      tags: [Auth]
+      security: []
+      x-data-sensitivity: Confidential
+      x-audit-required: true
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber]
+              properties:
+                phoneNumber:
+                  type: string
+                  pattern: '^\+966[0-9]{9}$'
+                  description: "Saudi phone number in E.164 format"
+                  example: "+966512345678"
+            examples:
+              standard:
+                summary: "Standard registration"
+                value:
+                  phoneNumber: "+966512345678"
+      responses:
+        '200':
+          description: "OTP sent successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      otpSent:
+                        type: boolean
+                        example: true
+                      expiresInSeconds:
+                        type: integer
+                        example: 90
+                      maskedPhone:
+                        type: string
+                        example: "+966 5XX XXX XX78"
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      summary: "Verify OTP code"
+      tags: [Auth]
+      security: []
+      x-data-sensitivity: Restricted
+      x-audit-required: true
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber, otpCode]
+              properties:
+                phoneNumber:
+                  type: string
+                  pattern: '^\+966[0-9]{9}$'
+                  example: "+966512345678"
+                otpCode:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+                  description: "6-digit OTP code"
+                  example: "482931"
+      responses:
+        '200':
+          description: "OTP verified — returns JWT tokens"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          description: "Invalid or expired OTP"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                invalid:
+                  value: { type: "invalid-otp", title: "Invalid OTP", status: 401, detail: "Code is incorrect. 2 attempts remaining." }
+                expired:
+                  value: { type: "otp-expired", title: "OTP Expired", status: 401, detail: "Code has expired. Request a new one." }
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/token:
+    post:
+      operationId: loginWithCredentials
+      summary: "Login with phone + OTP (returns JWT)"
+      tags: [Auth]
+      security: []
+      x-data-sensitivity: Restricted
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber, otpCode]
+              properties:
+                phoneNumber:
+                  type: string
+                  example: "+966512345678"
+                otpCode:
+                  type: string
+                  example: "482931"
+                deviceFingerprint:
+                  type: string
+                  description: "Device ID for token binding"
+                  example: "android-abc123-def456"
+      responses:
+        '200':
+          description: "Authentication successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      summary: "Refresh access token using refresh token"
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      x-data-sensitivity: Restricted
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+                  description: "Opaque refresh token"
+                deviceFingerprint:
+                  type: string
+      responses:
+        '200':
+          description: "Token refreshed"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: "Refresh token invalid or expired"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /products:
+    get:
+      operationId: listProducts
+      summary: "List all active finance products"
+      tags: [Products]
+      security: []
+      x-data-sensitivity: Public
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: "Products listed"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+              examples:
+                standard:
+                  value:
+                    data:
+                      - id: "11111111-1111-1111-1111-111111111111"
+                        name: "BridgeNow Finance"
+                        type: "BridgeNow"
+                        minAmount: 4000
+                        maxAmount: 30000
+                        minTenureMonths: 24
+                        maxTenureMonths: 24
+                        profitRatePercent: 27.0
+                        earlyClosureFeePercent: 0
+                        adminFeePercent: 0.5
+                        description: "Easy Salary Advance for your immediate needs"
+                        isActive: true
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /products/{productId}:
+    get:
+      operationId: getProduct
+      summary: "Get product details by ID"
+      tags: [Products]
+      security: []
+      x-data-sensitivity: Public
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "11111111-1111-1111-1111-111111111111"
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: "Product details"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT access token (RS256, 15-min expiry)"
+
+  parameters:
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: "Correlation ID for tracing. Auto-generated if not provided."
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: "Client-generated UUID for idempotent requests"
+      schema:
+        type: string
+        format: uuid
+
+  headers:
+    CorrelationId:
+      schema:
+        type: string
+        format: uuid
+      description: "Echo of request correlation ID"
+
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: "JWT access token (RS256, 15-min expiry)"
+        refreshToken:
+          type: string
+          description: "Opaque refresh token (24hr, device-bound)"
+        expiresIn:
+          type: integer
+          description: "Access token TTL in seconds"
+          example: 900
+        tokenType:
+          type: string
+          example: "Bearer"
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "BridgeNow Finance"
+        type:
+          type: string
+          enum: [BridgeNow, Cash, Combo]
+        minAmount:
+          type: number
+          example: 4000
+        maxAmount:
+          type: number
+          example: 30000
+        minTenureMonths:
+          type: integer
+          example: 24
+        maxTenureMonths:
+          type: integer
+          example: 24
+        profitRatePercent:
+          type: number
+          example: 27.0
+        earlyClosureFeePercent:
+          type: number
+          example: 0
+        adminFeePercent:
+          type: number
+          example: 0.5
+        description:
+          type: string
+          example: "Easy Salary Advance for your immediate needs"
+        isActive:
+          type: boolean
+          example: true
+
+    ProblemDetails:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          example: "validation-error"
+        title:
+          type: string
+          example: "Validation Error"
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+  responses:
+    ValidationError:
+      description: "Request validation failed"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "validation-error"
+            title: "Validation Error"
+            status: 400
+            errors:
+              - field: "phoneNumber"
+                message: "Must be a valid Saudi phone number (+966XXXXXXXXX)"
+    Unauthorized:
+      description: "Authentication required or failed"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "unauthorized"
+            title: "Unauthorized"
+            status: 401
+    NotFound:
+      description: "Resource not found"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "not-found"
+            title: "Not Found"
+            status: 404
+    RateLimited:
+      description: "Too many requests"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "rate-limited"
+            title: "Too Many Requests"
+            status: 429
+            detail: "Maximum 3 OTP requests per 10 minutes"
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: "Seconds to wait"
+    InternalError:
+      description: "Internal server error"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "internal-error"
+            title: "Internal Server Error"
+            status: 500
